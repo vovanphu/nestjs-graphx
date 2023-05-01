@@ -1,0 +1,46 @@
+import { SerializeOptions } from '@nestjs/common';
+import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import {
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+@ObjectType()
+@Entity()
+@SerializeOptions({
+  excludePrefixes: ['_'],
+})
+export class NodeEntity<T> {
+  constructor(partial: Partial<T>) {
+    Object.assign(this, partial);
+  }
+
+  @Field(() => Int)
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Field(() => String)
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @Field(() => String)
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @Field(() => String, { nullable: true })
+  @DeleteDateColumn()
+  deletedAt: Date;
+}
+
+@InputType()
+export class NodeInput<T> {
+  constructor(partial: Partial<T>) {
+    Object.assign(this, partial);
+  }
+
+  @Field(() => Int)
+  id: number;
+}

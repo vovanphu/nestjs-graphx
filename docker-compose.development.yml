@@ -1,0 +1,42 @@
+services:
+  rabbitmq-mb:
+    image: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    volumes:
+    - rabbitmq-data:/var/lib/rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+    networks:
+      - crud-net
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  mysql-db:
+    image: mysql
+    command:  --default-authentication-plugin=mysql_native_password --skip-name-resolve
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql-root-crud
+      MYSQL_DATABASE: crud
+      MYSQL_USER: crud
+      MYSQL_PASSWORD: crud
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
+    ports:
+      - 3366:3306
+    networks:
+      - crud-net
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+volumes:
+  
+  rabbitmq-data:
+  mysql-data:
+
+networks:
+
+  crud-net: {}

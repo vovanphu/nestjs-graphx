@@ -1,8 +1,59 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/nestjs-crud/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/nestjs-crud/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/nestjs-crud",
+  "projects": {
+    "nestjs-crud": {
+      "type": "application",
+      "root": "apps/nestjs-crud",
+      "entryFile": "main",
+      "sourceRoot": "apps/nestjs-crud/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/nestjs-crud/tsconfig.app.json"
+      }
+    },
+    "user-management": {
+      "type": "application",
+      "root": "apps/user-management",
+      "entryFile": "main",
+      "sourceRoot": "apps/user-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/user-management/tsconfig.app.json"
+      }
+    },
+    "graphql-api": {
+      "type": "application",
+      "root": "apps/graphql-api",
+      "entryFile": "main",
+      "sourceRoot": "apps/graphql-api/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/graphql-api/tsconfig.app.json"
+      }
+    },
+    "crud": {
+      "type": "library",
+      "root": "libs/crud",
+      "entryFile": "index",
+      "sourceRoot": "libs/crud/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/crud/tsconfig.lib.json"
+      }
+    },
+    "entities": {
+      "type": "library",
+      "root": "libs/entities",
+      "entryFile": "index",
+      "sourceRoot": "libs/entities/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/entities/tsconfig.lib.json"
+      }
+    }
   }
 }
