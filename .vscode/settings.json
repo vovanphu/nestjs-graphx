@@ -13,4 +13,10 @@
     "source.formatDocument",
     "source.fixAll.eslint",
   ],
+  "exportall.config.folderListener": [
+    "/libs/crud/src/utils"
+  ],
+  "exportall.config.relExclusion": [
+    "/libs/crud/src/utils"
+  ],
 }

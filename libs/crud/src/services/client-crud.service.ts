@@ -10,7 +10,7 @@ import {
   CrudQueryService,
   IdentifyType,
   UpdateType,
-} from './types';
+} from '../types';
 
 export const CRUD_SERVICE_WATERMARK = '__crudService__';
 

@@ -1,12 +1,12 @@
 import { TypeOrmCrudService } from '@app/crud';
-import { User, UserDto } from '@app/entities';
+import { Task, TaskDto } from '@app/entities/task.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class UserManagementService extends TypeOrmCrudService<User, UserDto> {
-  constructor(@InjectRepository(User) repo: Repository<User>) {
+export class TaskManagementService extends TypeOrmCrudService<Task, TaskDto> {
+  constructor(@InjectRepository(Task) repo: Repository<Task>) {
     super(repo);
   }
 }

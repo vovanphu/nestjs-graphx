@@ -1,4 +1,4 @@
-import { UserEntity } from '@app/entities';
+import { User } from '@app/entities';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -29,7 +29,7 @@ import { UserManagementService } from './user-management.service';
       },
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([User]),
   ],
   controllers: [UserManagementController],
   providers: [UserManagementService],

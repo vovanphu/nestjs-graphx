@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DeepPartial, Repository, SelectQueryBuilder } from 'typeorm';
 import {
-  CrudFindOptions,
+  CrudFindManyOptions,
   CrudManyResult,
   CrudOffsetOptions,
   CrudOneResult,
   CrudQueryService,
   CrudSortOptions,
   WithIdType,
-} from './types';
+} from '../types';
 
 export async function applySort<Entity, Dto>(
   queryBuilder: SelectQueryBuilder<Entity>,
@@ -29,7 +29,7 @@ export async function applyOffsetPaginate<Entity>(
   queryBuilder.skip((options.page - 1) * options.limit).take(options.limit);
 }
 
-export async function offsetPaginate<Entity, Dto>(
+export async function paginate<Entity, Dto>(
   queryBuilder: SelectQueryBuilder<Entity>,
   sortOptions: CrudSortOptions<Dto> = {},
   paginateOptions: CrudOffsetOptions = {},
@@ -56,40 +56,38 @@ export class TypeOrmCrudService<Entity, Dto>
 {
   constructor(readonly repo: Repository<Entity>) {}
 
-  async createOne(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>> {
+  async create(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>> {
     return {
       entity: await this.repo.save(record as Entity),
     };
   }
 
-  async findOne(
+  async find(
     record: WithIdType<DeepPartial<Dto>>,
   ): Promise<CrudOneResult<Entity>> {
     const queryBuilder = this.repo.createQueryBuilder();
-    queryBuilder.andWhere('id = :id', { id: record.id });
+    for (const field in record) {
+      queryBuilder.andWhere(`${field} = :${field}`, { [field]: record[field] });
+    }
     return {
       entity: await queryBuilder.getOne(),
     };
   }
 
   async findMany(
-    options: CrudFindOptions<Entity>,
+    options: CrudFindManyOptions<Entity>,
   ): Promise<CrudManyResult<Entity>> {
     options = options || {};
     options.sort = options.sort || {};
     options.pagination = options.pagination || {};
     const queryBuilder = this.repo.createQueryBuilder();
-    return offsetPaginate(
-      queryBuilder,
-      options.sort,
-      options.pagination.offset,
-    );
+    return paginate(queryBuilder, options.sort, options.pagination.offset);
   }
 
-  async updateOne(
+  async update(
     record: WithIdType<DeepPartial<Dto>>,
   ): Promise<CrudOneResult<Entity>> {
-    const { entity } = await this.findOne(record);
+    const { entity } = await this.find(record);
     if (!entity) throw new NotFoundException();
     const newEntity = this.repo.merge(
       entity,
@@ -100,27 +98,27 @@ export class TypeOrmCrudService<Entity, Dto>
     };
   }
 
-  async softDeleteOne(
+  async softDelete(
     record: WithIdType<DeepPartial<Dto>>,
   ): Promise<CrudOneResult<Entity>> {
-    const { entity } = await this.findOne(record);
+    const { entity } = await this.find(record);
     if (!entity) return { entity };
     return {
       entity: await this.repo.softRemove(entity),
     };
   }
 
-  async restoreOne(
+  async restore(
     record: WithIdType<DeepPartial<Dto>>,
   ): Promise<CrudOneResult<Entity>> {
     await this.repo.restore(record.id);
-    return this.findOne(record);
+    return this.find(record);
   }
 
-  async deleteOne(
+  async delete(
     record: WithIdType<DeepPartial<Dto>>,
   ): Promise<CrudOneResult<Entity>> {
-    const { entity } = await this.findOne(record);
+    const { entity } = await this.find(record);
     return { entity: await this.repo.remove(entity) };
   }
 }

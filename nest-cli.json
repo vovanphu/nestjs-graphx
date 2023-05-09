@@ -54,6 +54,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/entities/tsconfig.lib.json"
       }
+    },
+    "task-management": {
+      "type": "application",
+      "root": "apps/task-management",
+      "entryFile": "main",
+      "sourceRoot": "apps/task-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/task-management/tsconfig.app.json"
+      }
     }
   }
 }

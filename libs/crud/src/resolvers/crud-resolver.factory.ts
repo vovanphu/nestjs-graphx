@@ -1,0 +1,118 @@
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  ClassType,
+  CreateType,
+  CrudFindManyOptions,
+  CrudManyResult,
+  CrudOneResult,
+  CrudQueryService,
+  IdentifyType,
+  UpdateType,
+  toCreateDto,
+  toCrudFindManyOptions,
+  toCrudManyResult,
+  toCrudOneResult,
+  toIdentifyDto,
+  toUpdateDto,
+} from '../types';
+
+export function CrudResolverFactory<Entity, Dto>(
+  EntityClass: ClassType<Entity>,
+  DtoClass: ClassType<Dto>,
+) {
+  return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
+    const entityName = EntityClass.name;
+    const CreateDto = toCreateDto(DtoClass);
+    const UpdateDto = toUpdateDto(DtoClass);
+    const IdentityDto = toIdentifyDto(EntityClass);
+    const OneResult = toCrudOneResult(EntityClass);
+    const FindManyOptions = toCrudFindManyOptions(EntityClass);
+    const ManyResult = toCrudManyResult(EntityClass);
+
+    @Resolver(EntityClass)
+    class CrudResolver
+      extends BaseClass
+      implements CrudQueryService<Entity, Dto>
+    {
+      readonly service: CrudQueryService<Entity, Dto>;
+
+      @Mutation(() => OneResult, {
+        name: `create${entityName}`,
+      })
+      async create(
+        @Args(`create${entityName}Record`, { type: () => CreateDto })
+        record: CreateType<Dto>,
+      ): Promise<CrudOneResult<Entity>> {
+        return this.service.create(record);
+      }
+
+      @Query(() => OneResult, {
+        name: `find${entityName}`,
+      })
+      async find(
+        @Args(`find${entityName}Record`, { type: () => IdentityDto })
+        record: IdentifyType<Dto>,
+      ): Promise<CrudOneResult<Entity>> {
+        return this.service.find(record);
+      }
+
+      @Query(() => ManyResult, {
+        name: `findMany${entityName}`,
+      })
+      async findMany(
+        @Args(`findMany${entityName}Options`, {
+          type: () => FindManyOptions,
+          nullable: true,
+        })
+        options?: CrudFindManyOptions<Entity>,
+      ): Promise<CrudManyResult<Entity>> {
+        return this.service.findMany(options);
+      }
+
+      @Mutation(() => OneResult, {
+        name: `update${entityName}`,
+      })
+      async update(
+        @Args(`update${entityName}Record`, { type: () => UpdateDto })
+        record: UpdateType<Dto>,
+      ): Promise<CrudOneResult<Entity>> {
+        return this.service.update(record);
+      }
+
+      @Mutation(() => OneResult, {
+        name: `softDelete${entityName}`,
+        nullable: true,
+      })
+      async softDelete(
+        @Args(`softDelete${entityName}Record`, { type: () => IdentityDto })
+        record: IdentifyType<Dto>,
+      ): Promise<CrudOneResult<Entity>> {
+        return this.service.softDelete(record);
+      }
+
+      @Mutation(() => OneResult, {
+        name: `restore${entityName}`,
+        nullable: true,
+      })
+      async restore(
+        @Args(`restore${entityName}Record`, { type: () => IdentityDto })
+        record: IdentifyType<Dto>,
+      ): Promise<CrudOneResult<Entity>> {
+        return this.service.restore(record);
+      }
+
+      @Mutation(() => OneResult, {
+        name: `delete${entityName}`,
+        nullable: true,
+      })
+      async delete(
+        @Args(`delete${entityName}Record`, { type: () => IdentityDto })
+        record: IdentifyType<Dto>,
+      ): Promise<CrudOneResult<Entity>> {
+        return this.service.delete(record);
+      }
+    }
+
+    return CrudResolver;
+  };
+}

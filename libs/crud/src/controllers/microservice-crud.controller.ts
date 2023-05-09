@@ -1,72 +1,72 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
-  Class,
+  ClassType,
   CreateType,
-  CrudFindOptions,
+  CrudFindManyOptions,
   CrudManyResult,
   CrudOneResult,
   CrudQueryService,
   IdentifyType,
   UpdateType,
-} from './types';
+} from '../types';
 
 export function createMicroserviceCrudController<Entity, Dto>(
-  EntityClass: Class<Entity>,
-): Class<any> {
+  EntityClass: ClassType<Entity>,
+): ClassType<any> {
   const entityName = EntityClass.name;
 
   @Controller()
   class MicroserviceCrudController implements CrudQueryService<Entity, Dto> {
     constructor(readonly service: CrudQueryService<Entity, Dto>) {}
 
-    @MessagePattern({ cmd: `createOne${entityName}` })
-    async createOne(
+    @MessagePattern({ cmd: `create${entityName}` })
+    async create(
       @Payload('record') record: CreateType<Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      return this.service.createOne(record);
+      return this.service.create(record);
     }
 
-    @MessagePattern({ cmd: `findOne${entityName}` })
-    async findOne(
+    @MessagePattern({ cmd: `find${entityName}` })
+    async find(
       @Payload('record') record: IdentifyType<Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      return this.service.findOne(record);
+      return this.service.find(record);
     }
 
     @MessagePattern({ cmd: `findMany${entityName}` })
     async findMany(
-      @Payload('options') options: CrudFindOptions<Entity>,
+      @Payload('options') options: CrudFindManyOptions<Entity>,
     ): Promise<CrudManyResult<Entity>> {
       return this.service.findMany(options);
     }
 
-    @MessagePattern({ cmd: `updateOne${entityName}` })
-    async updateOne(
+    @MessagePattern({ cmd: `update${entityName}` })
+    async update(
       @Payload('record') record: UpdateType<Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      return this.service.updateOne(record);
+      return this.service.update(record);
     }
 
-    @MessagePattern({ cmd: `softDeleteOne${entityName}` })
-    async softDeleteOne(
+    @MessagePattern({ cmd: `softDelete${entityName}` })
+    async softDelete(
       @Payload('record') record: IdentifyType<Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      return this.service.softDeleteOne(record);
+      return this.service.softDelete(record);
     }
 
-    @MessagePattern({ cmd: `restoreOne${entityName}` })
-    async restoreOne(
+    @MessagePattern({ cmd: `restore${entityName}` })
+    async restore(
       @Payload('record') record: IdentifyType<Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      return this.service.restoreOne(record);
+      return this.service.restore(record);
     }
 
-    @MessagePattern({ cmd: `deleteOne${entityName}` })
-    async deleteOne(
+    @MessagePattern({ cmd: `delete${entityName}` })
+    async delete(
       @Payload('record') record: IdentifyType<Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      return this.service.deleteOne(record);
+      return this.service.delete(record);
     }
   }
 
@@ -74,7 +74,7 @@ export function createMicroserviceCrudController<Entity, Dto>(
 }
 
 export function MicroserviceCrudController<Entity, Dto extends Entity>(
-  EntityClass: Class<Entity>,
-): Class<any> {
+  EntityClass: ClassType<Entity>,
+): ClassType<any> {
   return createMicroserviceCrudController<Entity, Dto>(EntityClass);
 }
