@@ -91,17 +91,8 @@ export class IDFilterOptions {
   @Field(() => String, { nullable: true })
   equal?: string;
 
-  @Field(() => String, { nullable: true })
-  like?: string;
-
-  @Field(() => String, { nullable: true })
-  notLike?: string;
-
   @Field(() => [String], { nullable: true })
   in?: string[];
-
-  @Field(() => [String], { nullable: true })
-  notIn?: string[];
 }
 
 export type BooleanFilterOperator = {
