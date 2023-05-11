@@ -6,12 +6,14 @@ export interface OneManyRelationOptions<Entity, Dto> {
   RelatedEntityClass: ClassType<Entity>;
   RelatedDtoClass: ClassType<Dto>;
   relationName: string;
+  inverseRelation: (...params: any[]) => any;
 }
 
 export function OneManyRelation<Entity, Dto>(
   RelatedEntityClass: ClassType<Entity>,
   RelatedDtoClass: ClassType<Dto>,
   relationName: string, // TODO: Refactory this
+  inverseRelation: (...params: any[]) => any,
 ): ClassDecorator {
   return (target) => {
     const oneManyRelations: OneManyRelationOptions<Entity, Dto>[] =
@@ -20,6 +22,7 @@ export function OneManyRelation<Entity, Dto>(
       RelatedEntityClass,
       RelatedDtoClass,
       relationName,
+      inverseRelation,
     });
     Reflect.defineMetadata(
       ONE_MANY_RELATION_WATERMARK,

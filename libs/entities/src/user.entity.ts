@@ -5,7 +5,7 @@ import { Column, Entity } from 'typeorm';
 import { Task, TaskDto } from './task.entity';
 
 @ObjectType()
-@OneManyRelation(Task, TaskDto, 'tasks')
+@OneManyRelation(Task, TaskDto, 'tasks', (task) => task.userId)
 @Entity()
 export class User extends NodeEntity<User> {
   @Field(() => String)
