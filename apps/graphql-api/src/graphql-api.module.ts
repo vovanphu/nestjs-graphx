@@ -49,7 +49,7 @@ import { UserModule } from './user/user.module';
         ClientProxyFactory.create({
           transport: Transport.RMQ,
           options: {
-            urls: ['amqp://rabbitmq:rabbitmq@localhost:5672'],
+            urls: ['amqp://rabbitmq-service:rabbitmq-service@localhost:5672'],
             queue: 'USER_MANAGEMENT',
           },
         }),
@@ -60,7 +60,7 @@ import { UserModule } from './user/user.module';
         ClientProxyFactory.create({
           transport: Transport.RMQ,
           options: {
-            urls: ['amqp://rabbitmq:rabbitmq@localhost:5672'],
+            urls: ['amqp://rabbitmq-service:rabbitmq-service@localhost:5672'],
             queue: 'TASK_MANAGEMENT',
           },
         }),
