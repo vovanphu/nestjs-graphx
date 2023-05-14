@@ -29,7 +29,6 @@ import { UserModule } from './user/user.module';
         return {
           path: '/',
           autoSchemaFile: true,
-          sortSchema: true,
           playground: false,
           plugins,
           includeStacktraceInErrorResponses: isDevelopment,
