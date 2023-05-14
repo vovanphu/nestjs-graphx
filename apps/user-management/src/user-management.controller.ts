@@ -5,7 +5,7 @@ import { UserManagementService } from './user-management.service';
 
 @Controller()
 export class UserManagementController extends MicroserviceCrudController(User) {
-  constructor(private readonly userManagementService: UserManagementService) {
+  constructor(readonly userManagementService: UserManagementService) {
     super(userManagementService);
   }
 }

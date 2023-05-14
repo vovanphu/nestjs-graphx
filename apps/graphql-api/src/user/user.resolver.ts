@@ -6,9 +6,5 @@ import { UserService } from './user.service';
 
 @Resolver(User)
 export class UserResolver extends GraphqlCrudResolver(User, UserDto, {
-  providers: [TaskService],
-}) {
-  constructor(readonly service: UserService) {
-    super();
-  }
-}
+  providers: [UserService, TaskService],
+}) {}

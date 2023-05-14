@@ -1,11 +1,9 @@
 import { Inject } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   ONE_MANY_RELATION_WATERMARK,
   OneManyRelationOptions,
 } from '../relation';
-import { CRUD_SERVICE_WATERMARK } from '../services';
 import {
   ClassType,
   CrudFindManyOptions,
@@ -14,6 +12,7 @@ import {
   toCrudFindManyOptions,
   toCrudManyResult,
 } from '../types';
+import { findEntityProvider } from '../utils/find-entity-provider';
 
 export function OneManyRelationFactory<Entity, RelatedEntity, RelatedDto>(
   EntityClass: Entity,
@@ -24,10 +23,14 @@ export function OneManyRelationFactory<Entity, RelatedEntity, RelatedDto>(
     const { RelatedEntityClass, relationName } = relation;
     const FindOptions = toCrudFindManyOptions(RelatedEntityClass);
     const RelatedManyResult = toCrudManyResult(RelatedEntityClass);
+    const relationService = Symbol('relationName');
 
     @Resolver(EntityClass)
     class OneManyRelation extends BaseClass {
-      @Inject(ModuleRef) readonly moduleRef: ModuleRef;
+      @Inject(provider) readonly [relationService]: CrudQueryService<
+        RelatedEntity,
+        RelatedDto
+      >;
 
       @ResolveField(() => RelatedManyResult)
       async [relationName](
@@ -38,9 +41,7 @@ export function OneManyRelationFactory<Entity, RelatedEntity, RelatedDto>(
         })
         options: CrudFindManyOptions<RelatedEntity>,
       ): Promise<CrudManyResult<RelatedEntity>> {
-        const service: CrudQueryService<RelatedEntity, RelatedDto> =
-          this.moduleRef.get(provider as any);
-        return service.findMany(options);
+        return this[relationService].findMany(options);
       }
     }
 
@@ -62,10 +63,7 @@ export function OneManyRelationsFactory<Entity>(
       ) => {
         const { RelatedEntityClass } = relation;
         const provider: CrudQueryService<RelatedEntity, RelatedDto> =
-          providers.find((p) => {
-            const metadata = Reflect.getMetadata(CRUD_SERVICE_WATERMARK, p);
-            return metadata?.EntityClass === RelatedEntityClass;
-          });
+          findEntityProvider(providers, RelatedEntityClass);
         return OneManyRelationFactory(
           EntityClass,
           relation,

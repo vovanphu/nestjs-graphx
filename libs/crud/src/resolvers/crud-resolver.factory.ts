@@ -1,3 +1,4 @@
+import { Inject } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   ClassType,
@@ -19,6 +20,7 @@ import {
 export function CrudResolverFactory<Entity, Dto>(
   EntityClass: ClassType<Entity>,
   DtoClass: ClassType<Dto>,
+  provider: CrudQueryService<Entity, Dto>,
 ) {
   return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
     const entityName = EntityClass.name;
@@ -28,13 +30,14 @@ export function CrudResolverFactory<Entity, Dto>(
     const OneResult = toCrudOneResult(EntityClass);
     const FindManyOptions = toCrudFindManyOptions(EntityClass);
     const ManyResult = toCrudManyResult(EntityClass);
+    const entityService = Symbol(entityName);
 
     @Resolver(EntityClass)
     class CrudResolver
       extends BaseClass
       implements CrudQueryService<Entity, Dto>
     {
-      readonly service: CrudQueryService<Entity, Dto>;
+      @Inject(provider) readonly [entityService]: CrudQueryService<Entity, Dto>;
 
       @Mutation(() => OneResult, {
         name: `create${entityName}`,
@@ -43,7 +46,7 @@ export function CrudResolverFactory<Entity, Dto>(
         @Args(`create${entityName}Record`, { type: () => CreateDto })
         record: CreateType<Dto>,
       ): Promise<CrudOneResult<Entity>> {
-        return this.service.create(record);
+        return this[entityService].create(record);
       }
 
       @Query(() => OneResult, {
@@ -53,7 +56,7 @@ export function CrudResolverFactory<Entity, Dto>(
         @Args(`find${entityName}Record`, { type: () => IdentityDto })
         record: IdentifyType<Dto>,
       ): Promise<CrudOneResult<Entity>> {
-        return this.service.find(record);
+        return this[entityService].find(record);
       }
 
       @Query(() => ManyResult, {
@@ -66,7 +69,7 @@ export function CrudResolverFactory<Entity, Dto>(
         })
         options?: CrudFindManyOptions<Entity>,
       ): Promise<CrudManyResult<Entity>> {
-        return this.service.findMany(options);
+        return this[entityService].findMany(options);
       }
 
       @Mutation(() => OneResult, {
@@ -76,7 +79,7 @@ export function CrudResolverFactory<Entity, Dto>(
         @Args(`update${entityName}Record`, { type: () => UpdateDto })
         record: UpdateType<Dto>,
       ): Promise<CrudOneResult<Entity>> {
-        return this.service.update(record);
+        return this[entityService].update(record);
       }
 
       @Mutation(() => OneResult, {
@@ -87,7 +90,7 @@ export function CrudResolverFactory<Entity, Dto>(
         @Args(`softDelete${entityName}Record`, { type: () => IdentityDto })
         record: IdentifyType<Dto>,
       ): Promise<CrudOneResult<Entity>> {
-        return this.service.softDelete(record);
+        return this[entityService].softDelete(record);
       }
 
       @Mutation(() => OneResult, {
@@ -98,7 +101,7 @@ export function CrudResolverFactory<Entity, Dto>(
         @Args(`restore${entityName}Record`, { type: () => IdentityDto })
         record: IdentifyType<Dto>,
       ): Promise<CrudOneResult<Entity>> {
-        return this.service.restore(record);
+        return this[entityService].restore(record);
       }
 
       @Mutation(() => OneResult, {
@@ -109,7 +112,7 @@ export function CrudResolverFactory<Entity, Dto>(
         @Args(`delete${entityName}Record`, { type: () => IdentityDto })
         record: IdentifyType<Dto>,
       ): Promise<CrudOneResult<Entity>> {
-        return this.service.delete(record);
+        return this[entityService].delete(record);
       }
     }
 
