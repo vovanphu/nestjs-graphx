@@ -13,4 +13,5 @@
     "source.formatDocument",
     "source.fixAll.eslint",
   ],
+  "window.zoomLevel": 0.5
 }

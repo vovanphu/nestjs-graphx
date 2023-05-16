@@ -5,21 +5,28 @@ import {
   CrudManyResult,
   CrudOffsetOptions,
   CrudOneResult,
+  CrudPaginationOptions,
   CrudQueryService,
   CrudSortOptions,
+  FilterOptions,
   WithIdType,
 } from '../types';
+
+export async function applyFilter<Entity, Dto>(
+  queryBuilder: SelectQueryBuilder<Entity>,
+  options: FilterOptions<Dto>,
+): Promise<void> {
+  console.log(options);
+}
 
 export async function applySort<Entity, Dto>(
   queryBuilder: SelectQueryBuilder<Entity>,
   options: CrudSortOptions<Dto>,
 ): Promise<void> {
   const aliasName = queryBuilder.expressionMap.mainAlias.name;
-  queryBuilder.addOrderBy(
-    `${aliasName}.${String(options.field)}`,
-    options.direction,
-  );
-  queryBuilder.addOrderBy(`${aliasName}.id`, options.direction);
+  const { field, direction } = options;
+  queryBuilder.addOrderBy(`${aliasName}.${String(field)}`, direction);
+  queryBuilder.addOrderBy(`${aliasName}.id`, direction);
 }
 
 export async function applyOffsetPaginate<Entity>(
@@ -29,25 +36,43 @@ export async function applyOffsetPaginate<Entity>(
   queryBuilder.skip((options.page - 1) * options.limit).take(options.limit);
 }
 
-export async function paginate<Entity, Dto>(
+export async function offsetPaginate<Entity, Dto>(
   queryBuilder: SelectQueryBuilder<Entity>,
+  filterOptions: FilterOptions<Dto>,
   sortOptions: CrudSortOptions<Dto> = {},
-  paginateOptions: CrudOffsetOptions = {},
+  offsetPaginateOptions: CrudOffsetOptions = {},
 ): Promise<CrudManyResult<Entity>> {
-  sortOptions.field = sortOptions.field || 'updatedAt';
-  sortOptions.direction = sortOptions.direction || 'DESC';
-  paginateOptions.page = paginateOptions.page || 1;
-  paginateOptions.limit = paginateOptions.limit || 5;
-  const total: number = await queryBuilder.getCount();
+  applyFilter(queryBuilder, filterOptions);
   applySort(queryBuilder, sortOptions);
-  applyOffsetPaginate(queryBuilder, paginateOptions);
+  applyOffsetPaginate(queryBuilder, offsetPaginateOptions);
+  const total = await queryBuilder.getCount();
   return {
     entities: await queryBuilder.getMany(),
     total,
-    pages: Math.ceil(total / paginateOptions.limit),
-    page: paginateOptions.page,
-    limit: paginateOptions.limit,
+    pages: Math.ceil(total / offsetPaginateOptions.limit),
+    page: offsetPaginateOptions.page,
+    limit: offsetPaginateOptions.limit,
   };
+}
+
+export async function paginate<Entity, Dto>(
+  queryBuilder: SelectQueryBuilder<Entity>,
+  filterOptions: FilterOptions<Dto>,
+  sortOptions: CrudSortOptions<Dto>,
+  paginateOptions: CrudPaginationOptions,
+): Promise<CrudManyResult<Entity>> {
+  sortOptions = sortOptions || {};
+  sortOptions.field = sortOptions.field || 'updatedAt';
+  sortOptions.direction = sortOptions.direction || 'DESC';
+  const offsetPaginateOptions = paginateOptions?.offset || {};
+  offsetPaginateOptions.page = offsetPaginateOptions.page || 1;
+  offsetPaginateOptions.limit = offsetPaginateOptions.limit || 5;
+  return offsetPaginate(
+    queryBuilder,
+    filterOptions,
+    sortOptions,
+    offsetPaginateOptions,
+  );
 }
 
 @Injectable()
@@ -78,10 +103,13 @@ export class TypeOrmCrudService<Entity, Dto>
     options: CrudFindManyOptions<Entity>,
   ): Promise<CrudManyResult<Entity>> {
     options = options || {};
-    options.sort = options.sort || {};
-    options.pagination = options.pagination || {};
     const queryBuilder = this.repo.createQueryBuilder();
-    return paginate(queryBuilder, options.sort, options.pagination.offset);
+    return paginate(
+      queryBuilder,
+      options?.filter,
+      options?.sort,
+      options?.pagination,
+    );
   }
 
   async update(

@@ -27,9 +27,9 @@ export type UpdateType<Dto> = WithIdType<DeepPartial<Dto>>;
 export type IdentifyType<Dto> = WithIdType<DeepPartial<Dto>>;
 
 export interface CrudFindManyOptions<Entity> {
+  filter?: FilterOptions<Entity>;
   sort?: CrudSortOptions<Entity>;
   pagination?: CrudPaginationOptions;
-  filter?: FilterOptions<Entity>;
 }
 
 export interface CrudSortOptions<Entity> {
@@ -434,14 +434,14 @@ export function toCrudFindManyOptions<Entity>(
 
     @InputType(className)
     class Options implements CrudFindManyOptions<Entity> {
+      @Field(() => Filter as ClassType<any>, { nullable: true })
+      filter?: FilterOptions<Entity>;
+
       @Field(() => Sort, { nullable: true })
       sort?: Sort;
 
       @Field(() => Pagination, { nullable: true })
       pagination?: Pagination;
-
-      @Field(() => Filter as ClassType<any>, { nullable: true })
-      filter?: FilterOptions<Entity>;
     }
 
     classes[className] = Options;
