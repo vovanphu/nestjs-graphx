@@ -8,7 +8,9 @@ async function bootstrap() {
     {
       transport: Transport.RMQ,
       options: {
-        urls: ['amqp://rabbitmq-service:rabbitmq-service@localhost:5672'],
+        urls: [
+          'amqp://rabbitmq-service:rabbitmq-service@rabbitmq-service:5672',
+        ],
         queue: 'USER_MANAGEMENT',
       },
     },

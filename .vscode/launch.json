@@ -6,18 +6,12 @@
   "configurations": [
     {
       "type": "node",
-      "request": "launch",
-      "name": "Graphql API Nest Debug",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run-script", "start:debug", "graphql-api"],
-      "timeout": 60000,
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "sourceMaps": true,
-      "outputCapture": "std",
-      "smartStep": true,
-      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]
-    },
+      "request": "attach",
+      "name": "Attach To Remote",
+      "address": "localhost",
+      "port": 9229,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    }
   ]
 }
