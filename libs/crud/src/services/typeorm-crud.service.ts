@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DeepPartial, Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  Brackets,
+  DeepPartial,
+  Repository,
+  SelectQueryBuilder,
+  WhereExpressionBuilder,
+} from 'typeorm';
 import {
   CrudFindManyOptions,
   CrudManyResult,
@@ -8,15 +14,54 @@ import {
   CrudPaginationOptions,
   CrudQueryService,
   CrudSortOptions,
+  FilterOperator,
   FilterOptions,
   WithIdType,
 } from '../types';
 
 export async function applyFilter<Entity, Dto>(
-  queryBuilder: SelectQueryBuilder<Entity>,
+  queryBuilder: SelectQueryBuilder<Entity> | WhereExpressionBuilder,
   options: FilterOptions<Dto>,
 ): Promise<void> {
-  console.log(options);
+  options = options || {};
+  Object.keys(options).forEach((key) => {
+    if (key === 'and') {
+      const filters = options[key];
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          filters.forEach((filter) => {
+            qb.andWhere(
+              new Brackets((sqb) => {
+                applyFilter(sqb, filter);
+              }),
+            );
+          });
+        }),
+      );
+    } else if (key === 'or') {
+      const filters = options[key];
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          filters.forEach((filter) => {
+            qb.orWhere(
+              new Brackets((sqb) => {
+                applyFilter(sqb, filter);
+              }),
+            );
+          });
+        }),
+      );
+    } else {
+      const operators: FilterOperator<Entity> = options[key];
+      Object.keys(operators).forEach((opKey) => {
+        const opValue = operators[opKey];
+        if (opKey === 'equal') {
+          const tempKey = `${key}_${Math.round(Math.random() * 1000)}`;
+          queryBuilder.andWhere(`${key} = :${tempKey}`, { [tempKey]: opValue });
+        }
+      });
+    }
+  });
 }
 
 export async function applySort<Entity, Dto>(
