@@ -1,5 +1,4 @@
-TODO Filtering
-  TODO Query service process
+TODO Sort field selection
 TODO Relation
 TODO Data Loader
 TODO Cursor pagination

@@ -1,5 +1,5 @@
 import { SerializeOptions } from '@nestjs/common';
-import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import {
   CreateDateColumn,
   DeleteDateColumn,
@@ -18,9 +18,9 @@ export class NodeEntity<T> {
     Object.assign(this, partial);
   }
 
-  @Field(() => Int)
+  @Field(() => ID)
   @PrimaryGeneratedColumn()
-  id: number;
+  id: string;
 
   @Field(() => String)
   @CreateDateColumn()
@@ -41,6 +41,6 @@ export class NodeInput<T> {
     Object.assign(this, partial);
   }
 
-  @Field(() => Int)
-  id: number;
+  @Field(() => ID)
+  id: string;
 }

@@ -1,6 +1,7 @@
 import {
   Field,
   Float,
+  ID,
   InputType,
   Int,
   IntersectionType,
@@ -16,9 +17,7 @@ export interface ClassType<T> extends Function {
   new (...args: any[]): T;
 }
 
-export type ID = string | number;
-
-export type WithIdType<T> = T & { id: ID };
+export type WithIdType<T> = T & { id: string | number };
 
 export type CreateType<Dto> = DeepPartial<Dto>;
 
@@ -88,10 +87,10 @@ export class StringFilterOptions {
 
 @InputType()
 export class IDFilterOptions {
-  @Field(() => String, { nullable: true })
+  @Field(() => ID, { nullable: true })
   equal?: string;
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [ID], { nullable: true })
   in?: string[];
 }
 
@@ -129,6 +128,8 @@ export class IntFilterOptions {
 
   @Field(() => Int, { nullable: true })
   greaterOrEqual?: number;
+
+  @Field(() => Int, { nullable: true })
   lesser?: number;
 
   @Field(() => Int, { nullable: true })
@@ -151,6 +152,8 @@ export class FloatFilterOptions {
 
   @Field(() => Float, { nullable: true })
   greaterOrEqual?: number;
+
+  @Field(() => Float, { nullable: true })
   lesser?: number;
 
   @Field(() => Float, { nullable: true })
@@ -306,6 +309,12 @@ export function toFilterDto<Entity>(
     }
 
     fields.forEach((field) => {
+      if (field.typeFn() === ID) {
+        Field(() => IDFilterOptions, { nullable: true })(
+          FilterGroupClass.prototype,
+          field.name,
+        );
+      }
       if (field.typeFn() === String) {
         Field(() => StringFilterOptions, { nullable: true })(
           FilterGroupClass.prototype,

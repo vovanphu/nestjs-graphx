@@ -1,12 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
+  DataSource,
   DeepPartial,
+  EntityMetadata,
   Repository,
   SelectQueryBuilder,
   WhereExpressionBuilder,
 } from 'typeorm';
+import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import {
+  ClassType,
   CrudFindManyOptions,
   CrudManyResult,
   CrudOffsetOptions,
@@ -20,44 +25,130 @@ import {
 } from '../types';
 
 export async function applyFilter<Entity, Dto>(
-  queryBuilder: SelectQueryBuilder<Entity> | WhereExpressionBuilder,
+  queryBuilder: WhereExpressionBuilder,
+  metadata: EntityMetadata,
   options: FilterOptions<Dto>,
 ): Promise<void> {
   options = options || {};
   Object.keys(options).forEach((key) => {
+    const tempKey = `${key}_${Math.round(Math.random() * 1000)}`;
+    const operators: FilterOperator<Entity> = options[key] || {};
+    const column: ColumnMetadata = metadata.columns.find(
+      (column) => column.propertyName === key,
+    );
+    console.log('column', column?.type);
     if (key === 'and') {
-      const filters = options[key];
+      const filters = options[key] || [];
       queryBuilder.andWhere(
         new Brackets((qb) => {
           filters.forEach((filter) => {
             qb.andWhere(
               new Brackets((sqb) => {
-                applyFilter(sqb, filter);
+                applyFilter(sqb, metadata, filter);
               }),
             );
           });
         }),
       );
     } else if (key === 'or') {
-      const filters = options[key];
+      const filters = options[key] || [];
       queryBuilder.andWhere(
         new Brackets((qb) => {
           filters.forEach((filter) => {
             qb.orWhere(
               new Brackets((sqb) => {
-                applyFilter(sqb, filter);
+                applyFilter(sqb, metadata, filter);
               }),
             );
           });
         }),
       );
-    } else {
-      const operators: FilterOperator<Entity> = options[key];
+    } else if (column.type === Number) {
       Object.keys(operators).forEach((opKey) => {
         const opValue = operators[opKey];
         if (opKey === 'equal') {
-          const tempKey = `${key}_${Math.round(Math.random() * 1000)}`;
           queryBuilder.andWhere(`${key} = :${tempKey}`, { [tempKey]: opValue });
+        } else if (opKey === 'greater') {
+          queryBuilder.andWhere(`${key} > :${tempKey}`, { [tempKey]: opValue });
+        } else if (opKey === 'greaterOrEqual') {
+          queryBuilder.andWhere(`${key} >= :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'lesser') {
+          queryBuilder.andWhere(`${key} < :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'lesserOrEqual') {
+          queryBuilder.andWhere(`${key} <= :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'in') {
+          queryBuilder.andWhere(`${key} IN (:...${tempKey})`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'notIn') {
+          queryBuilder.andWhere(`${key} NOT IN (:...${tempKey})`, {
+            [tempKey]: opValue,
+          });
+        }
+      });
+    } else if (column.type === Boolean) {
+      Object.keys(operators).forEach((opKey) => {
+        const opValue = operators[opKey];
+        if (opKey === 'is') {
+          queryBuilder.andWhere(`${key} = :${tempKey}`, { [tempKey]: opValue });
+        } else if (opKey === 'isNot') {
+          queryBuilder.andWhere(`${key} <> :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        }
+      });
+    } else if (column.type === String) {
+      Object.keys(operators).forEach((opKey) => {
+        const opValue = operators[opKey];
+        if (opKey === 'equal') {
+          queryBuilder.andWhere(`${key} = :${tempKey}`, { [tempKey]: opValue });
+        } else if (opKey === 'like') {
+          queryBuilder.andWhere(`${key} LIKE :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'notLike') {
+          queryBuilder.andWhere(`${key} NOT LIKE :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'in') {
+          queryBuilder.andWhere(`${key} IN (:...${tempKey})`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'notIn') {
+          queryBuilder.andWhere(`${key} NOT IN (:...${tempKey})`, {
+            [tempKey]: opValue,
+          });
+        }
+      });
+    } else if (column.type === 'datetime') {
+      Object.keys(operators).forEach((opKey) => {
+        const opValue = operators[opKey];
+        if (opKey === 'equal') {
+          queryBuilder.andWhere(`DATE(${key}) = :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'greater') {
+          queryBuilder.andWhere(`DATE(${key}) > :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'greaterOrEqual') {
+          queryBuilder.andWhere(`DATE(${key}) >= :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'lesser') {
+          queryBuilder.andWhere(`DATE(${key}) < :${tempKey}`, {
+            [tempKey]: opValue,
+          });
+        } else if (opKey === 'lesserOrEqual') {
+          queryBuilder.andWhere(`DATE(${key}) <= :${tempKey}`, {
+            [tempKey]: opValue,
+          });
         }
       });
     }
@@ -82,12 +173,14 @@ export async function applyOffsetPaginate<Entity>(
 }
 
 export async function offsetPaginate<Entity, Dto>(
-  queryBuilder: SelectQueryBuilder<Entity>,
+  repo: Repository<Entity>,
   filterOptions: FilterOptions<Dto>,
   sortOptions: CrudSortOptions<Dto> = {},
   offsetPaginateOptions: CrudOffsetOptions = {},
 ): Promise<CrudManyResult<Entity>> {
-  applyFilter(queryBuilder, filterOptions);
+  const queryBuilder = repo.createQueryBuilder();
+  const metadata = repo.metadata;
+  applyFilter(queryBuilder, metadata, filterOptions);
   applySort(queryBuilder, sortOptions);
   applyOffsetPaginate(queryBuilder, offsetPaginateOptions);
   const total = await queryBuilder.getCount();
@@ -101,7 +194,7 @@ export async function offsetPaginate<Entity, Dto>(
 }
 
 export async function paginate<Entity, Dto>(
-  queryBuilder: SelectQueryBuilder<Entity>,
+  repo: Repository<Entity>,
   filterOptions: FilterOptions<Dto>,
   sortOptions: CrudSortOptions<Dto>,
   paginateOptions: CrudPaginationOptions,
@@ -113,85 +206,102 @@ export async function paginate<Entity, Dto>(
   offsetPaginateOptions.page = offsetPaginateOptions.page || 1;
   offsetPaginateOptions.limit = offsetPaginateOptions.limit || 5;
   return offsetPaginate(
-    queryBuilder,
+    repo,
     filterOptions,
     sortOptions,
     offsetPaginateOptions,
   );
 }
 
-@Injectable()
-export class TypeOrmCrudService<Entity, Dto>
-  implements CrudQueryService<Entity, Dto>
-{
-  constructor(readonly repo: Repository<Entity>) {}
+export function createTypeOrmCrudService<Entity>(
+  EntityClass: ClassType<Entity>,
+): ClassType<any> {
+  const dataSourceSymbol = Symbol(`DataSource${EntityClass.name}`);
+  const repoSymbol = Symbol(`Repository${EntityClass.name}`);
 
-  async create(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>> {
-    return {
-      entity: await this.repo.save(record as Entity),
-    };
-  }
+  @Injectable()
+  class TypeOrmCrudService<Entity, Dto>
+    implements CrudQueryService<Entity, Dto>
+  {
+    @Inject(DataSource) readonly [dataSourceSymbol]: DataSource;
+    @InjectRepository(EntityClass) readonly [repoSymbol]: Repository<Entity>;
 
-  async find(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>> {
-    const queryBuilder = this.repo.createQueryBuilder();
-    for (const field in record) {
-      queryBuilder.andWhere(`${field} = :${field}`, { [field]: record[field] });
+    async create(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>> {
+      return {
+        entity: await this[repoSymbol].save(record as Entity),
+      };
     }
-    return {
-      entity: await queryBuilder.getOne(),
-    };
+
+    async find(
+      record: WithIdType<DeepPartial<Dto>>,
+    ): Promise<CrudOneResult<Entity>> {
+      const queryBuilder = this[repoSymbol].createQueryBuilder();
+      for (const field in record) {
+        queryBuilder.andWhere(`${field} = :${field}`, {
+          [field]: record[field],
+        });
+      }
+      return {
+        entity: await queryBuilder.getOne(),
+      };
+    }
+
+    async findMany(
+      options: CrudFindManyOptions<Entity>,
+    ): Promise<CrudManyResult<Entity>> {
+      options = options || {};
+      return paginate(
+        this[repoSymbol],
+        options?.filter,
+        options?.sort,
+        options?.pagination,
+      );
+    }
+
+    async update(
+      record: WithIdType<DeepPartial<Dto>>,
+    ): Promise<CrudOneResult<Entity>> {
+      const { entity } = await this.find(record);
+      if (!entity) throw new NotFoundException();
+      const newEntity = this[repoSymbol].merge(
+        entity,
+        record as unknown as DeepPartial<Entity>,
+      );
+      return {
+        entity: await this[repoSymbol].save(newEntity),
+      };
+    }
+
+    async softDelete(
+      record: WithIdType<DeepPartial<Dto>>,
+    ): Promise<CrudOneResult<Entity>> {
+      const { entity } = await this.find(record);
+      if (!entity) return { entity };
+      return {
+        entity: await this[repoSymbol].softRemove(entity),
+      };
+    }
+
+    async restore(
+      record: WithIdType<DeepPartial<Dto>>,
+    ): Promise<CrudOneResult<Entity>> {
+      await this[repoSymbol].restore(record.id);
+      return this.find(record);
+    }
+
+    async delete(
+      record: WithIdType<DeepPartial<Dto>>,
+    ): Promise<CrudOneResult<Entity>> {
+      const { entity } = await this.find(record);
+      return { entity: await this[repoSymbol].remove(entity) };
+    }
   }
 
-  async findMany(
-    options: CrudFindManyOptions<Entity>,
-  ): Promise<CrudManyResult<Entity>> {
-    options = options || {};
-    const queryBuilder = this.repo.createQueryBuilder();
-    return paginate(
-      queryBuilder,
-      options?.filter,
-      options?.sort,
-      options?.pagination,
-    );
-  }
+  return TypeOrmCrudService;
+}
 
-  async update(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>> {
-    const { entity } = await this.find(record);
-    if (!entity) throw new NotFoundException();
-    const newEntity = this.repo.merge(
-      entity,
-      record as unknown as DeepPartial<Entity>,
-    );
-    return {
-      entity: await this.repo.save(newEntity),
-    };
-  }
-
-  async softDelete(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>> {
-    const { entity } = await this.find(record);
-    if (!entity) return { entity };
-    return {
-      entity: await this.repo.softRemove(entity),
-    };
-  }
-
-  async restore(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>> {
-    await this.repo.restore(record.id);
-    return this.find(record);
-  }
-
-  async delete(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>> {
-    const { entity } = await this.find(record);
-    return { entity: await this.repo.remove(entity) };
-  }
+export function TypeOrmCrudService<Entity>(
+  EntityClass: ClassType<Entity>,
+): ClassType<any> {
+  return createTypeOrmCrudService(EntityClass);
 }
