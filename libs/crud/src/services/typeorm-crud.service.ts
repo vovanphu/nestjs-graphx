@@ -25,7 +25,7 @@ import {
 } from '../types';
 
 export async function applyFilter<Entity, Dto>(
-  queryBuilder: WhereExpressionBuilder,
+  queryBuilder: SelectQueryBuilder<Entity> | WhereExpressionBuilder,
   metadata: EntityMetadata,
   options: FilterOptions<Dto>,
 ): Promise<void> {
@@ -82,6 +82,10 @@ export async function applyFilter<Entity, Dto>(
           queryBuilder.andWhere(`${key} <= :${tempKey}`, {
             [tempKey]: opValue,
           });
+        } else if (opKey === 'empty' && opValue) {
+          queryBuilder.andWhere(`${key} IS NULL`);
+        } else if (opKey === 'notEmpty' && opValue) {
+          queryBuilder.andWhere(`${key} IS NOT NULL`);
         } else if (opKey === 'in') {
           queryBuilder.andWhere(`${key} IN (:...${tempKey})`, {
             [tempKey]: opValue,
@@ -116,6 +120,10 @@ export async function applyFilter<Entity, Dto>(
           queryBuilder.andWhere(`${key} NOT LIKE :${tempKey}`, {
             [tempKey]: opValue,
           });
+        } else if (opKey === 'empty' && opValue) {
+          queryBuilder.andWhere(`${key} IS NULL`);
+        } else if (opKey === 'notEmpty' && opValue) {
+          queryBuilder.andWhere(`${key} IS NOT NULL`);
         } else if (opKey === 'in') {
           queryBuilder.andWhere(`${key} IN (:...${tempKey})`, {
             [tempKey]: opValue,
@@ -149,6 +157,16 @@ export async function applyFilter<Entity, Dto>(
           queryBuilder.andWhere(`DATE(${key}) <= :${tempKey}`, {
             [tempKey]: opValue,
           });
+        } else if (opKey === 'empty' && opValue) {
+          queryBuilder.andWhere(`${key} IS NULL`);
+        } else if (opKey === 'notEmpty' && opValue) {
+          if (
+            column.isDeleteDate &&
+            queryBuilder instanceof SelectQueryBuilder
+          ) {
+            queryBuilder.withDeleted();
+          }
+          queryBuilder.andWhere(`${key} IS NOT NULL`);
         }
       });
     }

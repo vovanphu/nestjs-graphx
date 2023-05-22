@@ -63,6 +63,8 @@ export type StringFilterOperator = {
   equal?: string;
   like?: string;
   notLike?: string;
+  empty?: boolean;
+  notEmpty?: boolean;
   in?: string[];
   notIn?: string[];
 };
@@ -77,6 +79,12 @@ export class StringFilterOptions {
 
   @Field(() => String, { nullable: true })
   notLike?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  empty?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  notEmpty?: boolean;
 
   @Field(() => [String], { nullable: true })
   in?: string[];
@@ -114,6 +122,8 @@ export type NumberFilterOperator = {
   greaterOrEqual?: number;
   lesser?: number;
   lesserOrEqual?: number;
+  empty?: boolean;
+  notEmpty?: boolean;
   in?: string[];
   notIn?: string[];
 };
@@ -134,6 +144,12 @@ export class IntFilterOptions {
 
   @Field(() => Int, { nullable: true })
   lesserOrEqual?: number;
+
+  @Field(() => Boolean, { nullable: true })
+  empty?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  notEmpty?: boolean;
 
   @Field(() => [Int], { nullable: true })
   in?: string[];
@@ -159,6 +175,12 @@ export class FloatFilterOptions {
   @Field(() => Float, { nullable: true })
   lesserOrEqual?: number;
 
+  @Field(() => Boolean, { nullable: true })
+  empty?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  notEmpty?: boolean;
+
   @Field(() => [Float], { nullable: true })
   in?: string[];
 
@@ -172,6 +194,8 @@ export type DateFilterOperator = {
   greaterOrEqual?: Date;
   lesser?: Date;
   lesserOrEqual?: Date;
+  empty?: boolean;
+  notEmpty?: boolean;
 };
 
 @InputType()
@@ -190,6 +214,12 @@ export class DateFilterOptions {
 
   @Field(() => String, { nullable: true })
   lesserOrEqual?: Date;
+
+  @Field(() => Boolean, { nullable: true })
+  empty?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  notEmpty?: boolean;
 }
 
 export type FilterGroup<Entity> = {
