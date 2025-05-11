@@ -7,32 +7,40 @@ import {
   CrudFindManyOptions,
   CrudManyResult,
   CrudOneResult,
-  CrudQueryService,
+  CrudQueryInterface,
   IdentifyType,
   UpdateType,
 } from '../types';
 
-export const CRUD_SERVICE_WATERMARK = '__crudService__';
+export const CRUD_PROXY_WATERMARK = Symbol('CRUD_PROXY_WATERMARK');
 
-export function CrudService<Entity>(Entity: ClassType<Entity>): ClassDecorator {
+// # TODO: Pass down proxy token so we can inject it in the service
+export function CrudProxy<Entity>(
+  EntityClass: ClassType<Entity>,
+): ClassDecorator {
   return (target) => {
-    const type = Entity;
-    Reflect.defineMetadata(
-      CRUD_SERVICE_WATERMARK,
-      { EntityClass: type },
-      target,
-    );
-    Injectable()(target.prototype);
+    Reflect.defineMetadata(CRUD_PROXY_WATERMARK, EntityClass, target);
   };
 }
 
-export function createClientCrudService<Entity, Dto>(
+export function findCrudProxyProvider<Entity, Dto>(
+  providers: CrudQueryInterface<Entity, Dto>[],
+  EntityClass: ClassType<Entity>,
+): CrudQueryInterface<Entity, Dto> | null {
+  if (!providers || !EntityClass) return null;
+  return providers.find((p) => {
+    return Reflect.getMetadata(CRUD_PROXY_WATERMARK, p) === EntityClass;
+  });
+}
+
+export function CrudProxyServiceFactory<Entity, Dto>(
   EntityClass: ClassType<Entity>,
 ): ClassType<any> {
   const entityName = EntityClass.name;
 
-  @CrudService(EntityClass)
-  class ClientCrudService implements CrudQueryService<Entity, Dto> {
+  @CrudProxy(EntityClass)
+  @Injectable()
+  class ClientCrudService implements CrudQueryInterface<Entity, Dto> {
     constructor(readonly client: ClientProxy) {}
 
     async create(record: CreateType<Dto>): Promise<CrudOneResult<Entity>> {
@@ -54,7 +62,7 @@ export function createClientCrudService<Entity, Dto>(
     async findMany(
       options: CrudFindManyOptions<Entity>,
     ): Promise<CrudManyResult<Entity>> {
-      const result$ = this.client.send<Promise<CrudManyResult<Entity>>>(
+      const result$ = this.client.send<CrudManyResult<Entity>>(
         { cmd: `findMany${entityName}` },
         { options },
       );
@@ -97,10 +105,4 @@ export function createClientCrudService<Entity, Dto>(
   }
 
   return ClientCrudService;
-}
-
-export function ClientCrudService<Entity, Dto extends Entity>(
-  EntityClass: ClassType<Entity>,
-): ClassType<any> {
-  return createClientCrudService<Entity, Dto>(EntityClass);
 }

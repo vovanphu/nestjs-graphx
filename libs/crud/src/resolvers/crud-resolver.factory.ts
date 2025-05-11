@@ -6,7 +6,7 @@ import {
   CrudFindManyOptions,
   CrudManyResult,
   CrudOneResult,
-  CrudQueryService,
+  CrudQueryInterface,
   IdentifyType,
   UpdateType,
   toCreateDto,
@@ -20,7 +20,7 @@ import {
 export function CrudResolverFactory<Entity, Dto>(
   EntityClass: ClassType<Entity>,
   DtoClass: ClassType<Dto>,
-  provider: CrudQueryService<Entity, Dto>,
+  provider: CrudQueryInterface<Entity, Dto>,
 ) {
   return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
     const entityName = EntityClass.name;
@@ -35,9 +35,12 @@ export function CrudResolverFactory<Entity, Dto>(
     @Resolver(EntityClass)
     class CrudResolver
       extends BaseClass
-      implements CrudQueryService<Entity, Dto>
+      implements CrudQueryInterface<Entity, Dto>
     {
-      @Inject(provider) readonly [entityService]: CrudQueryService<Entity, Dto>;
+      @Inject(provider) readonly [entityService]: CrudQueryInterface<
+        Entity,
+        Dto
+      >;
 
       @Mutation(() => OneResult, {
         name: `create${entityName}`,

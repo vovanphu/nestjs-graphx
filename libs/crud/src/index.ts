@@ -1,5 +1,5 @@
+export * from './base.entity';
 export * from './controllers';
-export * from './node.entity';
 export * from './relation';
 export * from './resolvers';
 export * from './services';

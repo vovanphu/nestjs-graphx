@@ -1,13 +1,10 @@
-import { NodeEntity, NodeInput } from '@app/crud';
-import { OneManyRelation } from '@app/crud/relation';
+import { BaseDto, BaseEntity } from '@app/crud';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Column, Entity } from 'typeorm';
-import { Task, TaskDto } from './task.entity';
 
 @ObjectType()
-@OneManyRelation(Task, TaskDto, 'tasks', (task) => task.userId)
 @Entity()
-export class User extends NodeEntity<User> {
+export class User extends BaseEntity<User> {
   @Field(() => String)
   @Column({ unique: true })
   username: string;
@@ -21,7 +18,7 @@ export class User extends NodeEntity<User> {
 }
 
 @InputType()
-export class UserDto extends NodeInput<UserDto> {
+export class UserDto extends BaseDto<UserDto> {
   @Field(() => String)
   username: string;
 

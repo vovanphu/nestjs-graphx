@@ -4,20 +4,20 @@ import {
   ONE_MANY_RELATION_WATERMARK,
   OneManyRelationOptions,
 } from '../relation';
+import { findCrudProxyProvider } from '../services';
 import {
   ClassType,
   CrudFindManyOptions,
   CrudManyResult,
-  CrudQueryService,
+  CrudQueryInterface,
   toCrudFindManyOptions,
   toCrudManyResult,
 } from '../types';
-import { findEntityProvider } from '../utils/find-entity-provider';
 
 export function OneManyRelationFactory<Entity, RelatedEntity, RelatedDto>(
   EntityClass: Entity,
   relation: OneManyRelationOptions<RelatedEntity, RelatedDto>,
-  provider: any,
+  provider: CrudQueryInterface<RelatedEntity, RelatedDto>,
 ) {
   return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
     const { RelatedEntityClass, relationName } = relation;
@@ -27,7 +27,7 @@ export function OneManyRelationFactory<Entity, RelatedEntity, RelatedDto>(
 
     @Resolver(EntityClass)
     class OneManyRelation extends BaseClass {
-      @Inject(provider) readonly [relationService]: CrudQueryService<
+      @Inject(provider) readonly [relationService]: CrudQueryInterface<
         RelatedEntity,
         RelatedDto
       >;
@@ -62,8 +62,8 @@ export function OneManyRelationsFactory<Entity>(
         relation: OneManyRelationOptions<RelatedEntity, RelatedDto>,
       ) => {
         const { RelatedEntityClass } = relation;
-        const provider: CrudQueryService<RelatedEntity, RelatedDto> =
-          findEntityProvider(providers, RelatedEntityClass);
+        const provider: CrudQueryInterface<RelatedEntity, RelatedDto> =
+          findCrudProxyProvider(providers, RelatedEntityClass);
         return OneManyRelationFactory(
           EntityClass,
           relation,

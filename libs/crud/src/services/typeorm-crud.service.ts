@@ -17,7 +17,7 @@ import {
   CrudOffsetOptions,
   CrudOneResult,
   CrudPaginationOptions,
-  CrudQueryService,
+  CrudQueryInterface,
   CrudSortOptions,
   FilterOperator,
   FilterOptions,
@@ -27,16 +27,28 @@ import {
 export async function applyFilter<Entity, Dto>(
   queryBuilder: SelectQueryBuilder<Entity> | WhereExpressionBuilder,
   metadata: EntityMetadata,
-  options: FilterOptions<Dto>,
+  options: FilterOptions<Dto>, // # TODO Check this, why didn't use <Entity> for simplicity
 ): Promise<void> {
   options = options || {};
   Object.keys(options).forEach((key) => {
-    const tempKey = `${key}_${Math.round(Math.random() * 1000)}`;
+    const tempKey = `${key}_${Math.round(Math.random() * 1000)}`; // # TODO Is this okay to random from 1 to 1000
     const operators: FilterOperator<Entity> = options[key] || {};
     const column: ColumnMetadata = metadata.columns.find(
       (column) => column.propertyName === key,
     );
-    console.log('column', column?.type);
+
+    /**
+     * # TODO Allow FilterGroup and FilterOperators exist in the same time may cause unexpected behaviors.
+     * For example, check the result of this filter:
+     * {
+     *   and: [
+     *    {
+     *       and : [ { name: { equal: 'John' }} ]
+     *    }
+     *   ]
+     * }
+     */
+
     if (key === 'and') {
       const filters = options[key] || [];
       queryBuilder.andWhere(
@@ -180,7 +192,7 @@ export async function applySort<Entity, Dto>(
   const aliasName = queryBuilder.expressionMap.mainAlias.name;
   const { field, direction } = options;
   queryBuilder.addOrderBy(`${aliasName}.${String(field)}`, direction);
-  queryBuilder.addOrderBy(`${aliasName}.id`, direction);
+  queryBuilder.addOrderBy(`${aliasName}.id`, direction); // # Is this necessary?
 }
 
 export async function applyOffsetPaginate<Entity>(
@@ -190,7 +202,7 @@ export async function applyOffsetPaginate<Entity>(
   queryBuilder.skip((options.page - 1) * options.limit).take(options.limit);
 }
 
-export async function offsetPaginate<Entity, Dto>(
+export async function offsetPaginate<Entity, Dto>( // # TODO Check its name, this function does more than just offset paginate
   repo: Repository<Entity>,
   filterOptions: FilterOptions<Dto>,
   sortOptions: CrudSortOptions<Dto> = {},
@@ -211,12 +223,13 @@ export async function offsetPaginate<Entity, Dto>(
   };
 }
 
-export async function paginate<Entity, Dto>(
+export async function paginate<Entity, Dto>( // # TODO Check its name, why we need to call another function here?
   repo: Repository<Entity>,
   filterOptions: FilterOptions<Dto>,
   sortOptions: CrudSortOptions<Dto>,
   paginateOptions: CrudPaginationOptions,
 ): Promise<CrudManyResult<Entity>> {
+  // This function just provide default values
   sortOptions = sortOptions || {};
   sortOptions.field = sortOptions.field || 'updatedAt';
   sortOptions.direction = sortOptions.direction || 'DESC';
@@ -231,15 +244,15 @@ export async function paginate<Entity, Dto>(
   );
 }
 
-export function createTypeOrmCrudService<Entity>(
+export function TypeOrmCrudServiceFactory<Entity>(
   EntityClass: ClassType<Entity>,
-): ClassType<any> {
+): ClassType<CrudQueryInterface<Entity, any>> {
   const dataSourceSymbol = Symbol(`DataSource${EntityClass.name}`);
   const repoSymbol = Symbol(`Repository${EntityClass.name}`);
 
   @Injectable()
   class TypeOrmCrudService<Entity, Dto>
-    implements CrudQueryService<Entity, Dto>
+    implements CrudQueryInterface<Entity, Dto>
   {
     @Inject(DataSource) readonly [dataSourceSymbol]: DataSource;
     @InjectRepository(EntityClass) readonly [repoSymbol]: Repository<Entity>;
@@ -294,7 +307,7 @@ export function createTypeOrmCrudService<Entity>(
       record: WithIdType<DeepPartial<Dto>>,
     ): Promise<CrudOneResult<Entity>> {
       const { entity } = await this.find(record);
-      if (!entity) return { entity };
+      if (!entity) return { entity }; // # TODO Should we throw error here?
       return {
         entity: await this[repoSymbol].softRemove(entity),
       };
@@ -316,10 +329,4 @@ export function createTypeOrmCrudService<Entity>(
   }
 
   return TypeOrmCrudService;
-}
-
-export function TypeOrmCrudService<Entity>(
-  EntityClass: ClassType<Entity>,
-): ClassType<any> {
-  return createTypeOrmCrudService(EntityClass);
 }

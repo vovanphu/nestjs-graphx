@@ -4,7 +4,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
-import { TaskModule } from './task/task.module';
 import { UserModule } from './user/user.module';
 
 @Global()
@@ -38,7 +37,6 @@ import { UserModule } from './user/user.module';
       inject: [ConfigService],
     }),
     UserModule,
-    TaskModule,
   ],
   controllers: [],
   providers: [

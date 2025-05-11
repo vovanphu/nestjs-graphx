@@ -6,19 +6,19 @@ import {
   CrudFindManyOptions,
   CrudManyResult,
   CrudOneResult,
-  CrudQueryService,
+  CrudQueryInterface,
   IdentifyType,
   UpdateType,
 } from '../types';
 
-export function createMicroserviceCrudController<Entity, Dto>(
+export function microserviceCrudControllerFactory<Entity, Dto>(
   EntityClass: ClassType<Entity>,
 ): ClassType<any> {
   const entityName = EntityClass.name;
 
   @Controller()
-  class MicroserviceCrudController implements CrudQueryService<Entity, Dto> {
-    constructor(readonly service: CrudQueryService<Entity, Dto>) {}
+  class MicroserviceCrudController implements CrudQueryInterface<Entity, Dto> {
+    constructor(readonly service: CrudQueryInterface<Entity, Dto>) {}
 
     @MessagePattern({ cmd: `create${entityName}` })
     async create(
@@ -73,8 +73,8 @@ export function createMicroserviceCrudController<Entity, Dto>(
   return MicroserviceCrudController;
 }
 
-export function MicroserviceCrudController<Entity, Dto extends Entity>(
+export function MicroserviceCrudControllerFactory<Entity, Dto extends Entity>(
   EntityClass: ClassType<Entity>,
 ): ClassType<any> {
-  return createMicroserviceCrudController<Entity, Dto>(EntityClass);
+  return microserviceCrudControllerFactory<Entity, Dto>(EntityClass);
 }

@@ -13,7 +13,7 @@ import {
 @SerializeOptions({
   excludePrefixes: ['_'],
 })
-export class NodeEntity<T> {
+export class BaseEntity<T> {
   constructor(partial: Partial<T>) {
     Object.assign(this, partial);
   }
@@ -36,7 +36,7 @@ export class NodeEntity<T> {
 }
 
 @InputType()
-export class NodeInput<T> {
+export class BaseDto<T> {
   constructor(partial: Partial<T>) {
     Object.assign(this, partial);
   }

@@ -13,9 +13,7 @@ import {
 import { DeepPartial } from 'typeorm';
 import { getFieldsAndDecoratorForType } from './utils';
 
-export interface ClassType<T> extends Function {
-  new (...args: any[]): T;
-}
+export type ClassType<T> = new (...args: any[]) => T;
 
 export type WithIdType<T> = T & { id: string | number };
 
@@ -240,7 +238,7 @@ export type FieldFilterOperator<Type> = Type extends string
 export type FilterOptions<Entity> = FilterGroup<Entity> &
   FilterOperator<Entity>;
 
-export interface CrudQueryService<Entity, Dto> {
+export interface CrudQueryInterface<Entity, Dto> {
   create(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>>;
 
   find(record: WithIdType<DeepPartial<Dto>>): Promise<CrudOneResult<Entity>>;
@@ -299,6 +297,7 @@ export function toCreateDto<Dto extends ClassType<any>>(
   if (!classes[className]) {
     @InputType(className)
     class CreateDto extends OmitType(DtoClass, ['id']) {}
+    // # TODO: Omit read only fields
     classes[className] = CreateDto;
   }
   return classes[className];
