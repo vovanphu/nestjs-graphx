@@ -3,13 +3,14 @@ import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import {
   ClassType,
-  CreateType,
-  CrudFindManyOptions,
+  CrudCreateType,
+  CrudFindManyType,
+  CrudFindType,
   CrudManyResult,
   CrudOneResult,
   CrudQueryInterface,
+  CrudUpdateType,
   IdentifyType,
-  UpdateType,
 } from '../types';
 
 export const CRUD_PROXY_WATERMARK = Symbol('CRUD_PROXY_WATERMARK');
@@ -43,7 +44,7 @@ export function CrudProxyServiceFactory<Entity, Dto>(
   class ClientCrudService implements CrudQueryInterface<Entity, Dto> {
     constructor(readonly client: ClientProxy) {}
 
-    async create(record: CreateType<Dto>): Promise<CrudOneResult<Entity>> {
+    async create(record: CrudCreateType<Dto>): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `create${entityName}` },
         { record },
@@ -51,7 +52,7 @@ export function CrudProxyServiceFactory<Entity, Dto>(
       return lastValueFrom(result$);
     }
 
-    async find(record: IdentifyType<Dto>): Promise<CrudOneResult<Entity>> {
+    async find(record: CrudFindType<Entity>): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `find${entityName}` },
         { record },
@@ -59,8 +60,18 @@ export function CrudProxyServiceFactory<Entity, Dto>(
       return lastValueFrom(result$);
     }
 
+    async findById(
+      record: IdentifyType<Entity>,
+    ): Promise<CrudOneResult<Entity>> {
+      const result$ = this.client.send<CrudOneResult<Entity>>(
+        { cmd: `findById${entityName}` },
+        { record },
+      );
+      return lastValueFrom(result$);
+    }
+
     async findMany(
-      options: CrudFindManyOptions<Entity>,
+      options: CrudFindManyType<Entity>,
     ): Promise<CrudManyResult<Entity>> {
       const result$ = this.client.send<CrudManyResult<Entity>>(
         { cmd: `findMany${entityName}` },
@@ -69,7 +80,7 @@ export function CrudProxyServiceFactory<Entity, Dto>(
       return lastValueFrom(result$);
     }
 
-    async update(record: UpdateType<Dto>): Promise<CrudOneResult<Entity>> {
+    async update(record: CrudUpdateType<Dto>): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `update${entityName}` },
         { record },
@@ -78,7 +89,7 @@ export function CrudProxyServiceFactory<Entity, Dto>(
     }
 
     async softDelete(
-      record: IdentifyType<Dto>,
+      record: IdentifyType<Entity>,
     ): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `softDelete${entityName}` },
@@ -87,7 +98,9 @@ export function CrudProxyServiceFactory<Entity, Dto>(
       return lastValueFrom(result$);
     }
 
-    async restore(record: IdentifyType<Dto>): Promise<CrudOneResult<Entity>> {
+    async restore(
+      record: IdentifyType<Entity>,
+    ): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `restore${entityName}` },
         { record },
@@ -95,7 +108,7 @@ export function CrudProxyServiceFactory<Entity, Dto>(
       return lastValueFrom(result$);
     }
 
-    async delete(record: IdentifyType<Dto>): Promise<CrudOneResult<Entity>> {
+    async delete(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `delete${entityName}` },
         { record },

@@ -12,16 +12,19 @@ import {
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import {
   ClassType,
-  CrudFindManyOptions,
+  CrudCreateType,
+  CrudFindManyType,
+  CrudFindType,
   CrudManyResult,
   CrudOffsetOptions,
   CrudOneResult,
   CrudPaginationOptions,
   CrudQueryInterface,
   CrudSortOptions,
+  CrudUpdateType,
   FilterOperator,
   FilterOptions,
-  WithIdType,
+  IdentifyType,
 } from '../types';
 
 export async function applyFilter<Entity, Dto>(
@@ -257,17 +260,17 @@ export function TypeOrmCrudServiceFactory<Entity>(
     @Inject(DataSource) readonly [dataSourceSymbol]: DataSource;
     @InjectRepository(EntityClass) readonly [repoSymbol]: Repository<Entity>;
 
-    async create(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>> {
+    async create(record: CrudCreateType<Dto>): Promise<CrudOneResult<Entity>> {
       return {
         entity: await this[repoSymbol].save(record as Entity),
       };
     }
 
     async find(
-      record: WithIdType<DeepPartial<Dto>>,
+      record: CrudFindType<Entity | Dto>,
     ): Promise<CrudOneResult<Entity>> {
       const queryBuilder = this[repoSymbol].createQueryBuilder();
-      for (const field in record) {
+      for (const field in record as any) {
         queryBuilder.andWhere(`${field} = :${field}`, {
           [field]: record[field],
         });
@@ -277,8 +280,18 @@ export function TypeOrmCrudServiceFactory<Entity>(
       };
     }
 
+    async findById(
+      record: IdentifyType<Entity | Dto>,
+    ): Promise<CrudOneResult<Entity>> {
+      const queryBuilder = this[repoSymbol].createQueryBuilder();
+      queryBuilder.andWhere('id = :id', { id: record.id });
+      return {
+        entity: await queryBuilder.getOne(),
+      };
+    }
+
     async findMany(
-      options: CrudFindManyOptions<Entity>,
+      options: CrudFindManyType<Entity>,
     ): Promise<CrudManyResult<Entity>> {
       options = options || {};
       return paginate(
@@ -289,10 +302,8 @@ export function TypeOrmCrudServiceFactory<Entity>(
       );
     }
 
-    async update(
-      record: WithIdType<DeepPartial<Dto>>,
-    ): Promise<CrudOneResult<Entity>> {
-      const { entity } = await this.find(record);
+    async update(record: CrudUpdateType<Dto>): Promise<CrudOneResult<Entity>> {
+      const { entity } = await this.findById(record);
       if (!entity) throw new NotFoundException();
       const newEntity = this[repoSymbol].merge(
         entity,
@@ -304,9 +315,9 @@ export function TypeOrmCrudServiceFactory<Entity>(
     }
 
     async softDelete(
-      record: WithIdType<DeepPartial<Dto>>,
+      record: IdentifyType<Entity | Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      const { entity } = await this.find(record);
+      const { entity } = await this.findById(record);
       if (!entity) return { entity }; // # TODO Should we throw error here?
       return {
         entity: await this[repoSymbol].softRemove(entity),
@@ -314,16 +325,16 @@ export function TypeOrmCrudServiceFactory<Entity>(
     }
 
     async restore(
-      record: WithIdType<DeepPartial<Dto>>,
+      record: IdentifyType<Entity | Dto>,
     ): Promise<CrudOneResult<Entity>> {
       await this[repoSymbol].restore(record.id);
       return this.find(record);
     }
 
     async delete(
-      record: WithIdType<DeepPartial<Dto>>,
+      record: IdentifyType<Entity | Dto>,
     ): Promise<CrudOneResult<Entity>> {
-      const { entity } = await this.find(record);
+      const { entity } = await this.findById(record);
       return { entity: await this[repoSymbol].remove(entity) };
     }
   }

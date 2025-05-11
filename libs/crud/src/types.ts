@@ -17,12 +17,6 @@ export type ClassType<T> = new (...args: any[]) => T;
 
 export type WithIdType<T> = T & { id: string | number };
 
-export type CreateType<Dto> = DeepPartial<Dto>;
-
-export type UpdateType<Dto> = WithIdType<DeepPartial<Dto>>;
-
-export type IdentifyType<Dto> = WithIdType<DeepPartial<Dto>>;
-
 export interface CrudFindManyOptions<Entity> {
   filter?: FilterOptions<Entity>;
   sort?: CrudSortOptions<Entity>;
@@ -238,28 +232,36 @@ export type FieldFilterOperator<Type> = Type extends string
 export type FilterOptions<Entity> = FilterGroup<Entity> &
   FilterOperator<Entity>;
 
+export type IdentifyType<T> = WithIdType<DeepPartial<T>>;
+export type CrudCreateType<T> = DeepPartial<T>;
+export type CrudFindType<T> = DeepPartial<T>;
+export type CrudFindManyType<T> = CrudFindManyOptions<T>;
+export type CrudUpdateType<T> = WithIdType<DeepPartial<T>>;
+
 export interface CrudQueryInterface<Entity, Dto> {
-  create(record: DeepPartial<Dto>): Promise<CrudOneResult<Entity>>;
+  create(record: CrudCreateType<Dto>): Promise<CrudOneResult<Entity>>;
 
-  find(record: WithIdType<DeepPartial<Dto>>): Promise<CrudOneResult<Entity>>;
+  find(record: CrudFindType<Entity>): Promise<CrudOneResult<Entity>>;
 
-  findMany(
-    options: CrudFindManyOptions<Entity>,
-  ): Promise<CrudManyResult<Entity>>;
+  findById(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>>;
 
-  update(record: WithIdType<DeepPartial<Dto>>): Promise<CrudOneResult<Entity>>;
+  findMany(options: CrudFindManyType<Entity>): Promise<CrudManyResult<Entity>>;
 
-  softDelete?(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>>;
+  update(record: CrudUpdateType<Dto>): Promise<CrudOneResult<Entity>>;
 
-  restore?(
-    record: WithIdType<DeepPartial<Dto>>,
-  ): Promise<CrudOneResult<Entity>>;
+  softDelete?(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>>;
 
-  delete(record: WithIdType<DeepPartial<Dto>>): Promise<CrudOneResult<Entity>>;
+  restore?(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>>;
+
+  delete(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>>;
 }
 
+/**
+ * Retrieves the property descriptor of a method from its prototype.
+ *
+ * @param fn - A function whose property descriptor is to be retrieved.
+ * @returns The `TypedPropertyDescriptor` of the specified function, or `undefined` if not found.
+ */
 export function descriptorOf(fn: () => void): TypedPropertyDescriptor<any> {
   return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(fn), fn.name);
 }
@@ -376,8 +378,25 @@ export function toFilterDto<Entity>(
   return classes[className];
 }
 
-export function toIdentifyDto<Entity extends ClassType<any>>(
-  EntityClass: Entity,
+export function toFindDto<Entity>(
+  EntityClass: ClassType<Entity>,
+): ClassType<any> {
+  const className = `Find${EntityClass.name}`;
+
+  @InputType()
+  class InputTypeClass extends createInputType(EntityClass) {}
+
+  if (!classes[className]) {
+    @InputType(className)
+    class FindDto extends PartialType(InputTypeClass) {}
+    classes[className] = FindDto;
+  }
+
+  return classes[className];
+}
+
+export function toIdentifyDto<T extends ClassType<any>>(
+  EntityClass: T,
 ): ClassType<any> {
   const className = `Identify${EntityClass.name}`;
 
@@ -386,15 +405,15 @@ export function toIdentifyDto<Entity extends ClassType<any>>(
 
   if (!classes[className]) {
     @InputType(className)
-    class IdentifyDto extends PartialType(InputTypeClass) {}
+    class IdentifyDto extends PickType(InputTypeClass, ['id']) {}
     classes[className] = IdentifyDto;
   }
 
   return classes[className];
 }
 
-export function toCrudManyResult<Entity extends ClassType<any>>(
-  EntityClass: Entity,
+export function toCrudManyResult<Entity>(
+  EntityClass: ClassType<Entity>,
 ): ClassType<any> {
   const className = `OffsetManyResult${EntityClass.name}`;
 
