@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
+import { CatModule } from './cat/cat.module';
 import { UserModule } from './user/user.module';
 
 @Global()
@@ -37,6 +38,7 @@ import { UserModule } from './user/user.module';
       inject: [ConfigService],
     }),
     UserModule,
+    CatModule,
   ],
   controllers: [],
   providers: [
@@ -54,7 +56,7 @@ import { UserModule } from './user/user.module';
         }),
     },
     {
-      provide: 'TASK_MANAGEMENT',
+      provide: 'CAT_MANAGEMENT',
       useFactory: () =>
         ClientProxyFactory.create({
           transport: Transport.RMQ,
@@ -62,11 +64,11 @@ import { UserModule } from './user/user.module';
             urls: [
               'amqp://rabbitmq-service:rabbitmq-service@rabbitmq-service:5672',
             ],
-            queue: 'TASK_MANAGEMENT',
+            queue: 'CAT_MANAGEMENT',
           },
         }),
     },
   ],
-  exports: ['USER_MANAGEMENT', 'TASK_MANAGEMENT'],
+  exports: ['USER_MANAGEMENT', 'CAT_MANAGEMENT'],
 })
 export class GraphqlApiModule {}

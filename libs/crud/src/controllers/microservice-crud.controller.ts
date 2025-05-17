@@ -1,7 +1,7 @@
 import { Controller, Inject } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
-  ClassType,
+  ClassConstructor,
   CrudCreateType,
   CrudFindManyType,
   CrudFindType,
@@ -12,21 +12,21 @@ import {
   IdentifyType,
 } from '../types';
 
-export function MicroserviceCrudControllerFactory<Entity, Dto>(
-  EntityClass: ClassType<Entity>,
-  provider: ClassType<any>,
-): ClassType<any> {
+export function MicroserviceCrudControllerFactory<Entity>(
+  EntityClass: ClassConstructor<Entity>,
+  provider: ClassConstructor<any>,
+): ClassConstructor<any> {
   const entityName = EntityClass.name;
   const providerToken = Symbol(`${entityName}Service`);
 
   @Controller()
-  class MicroserviceCrudController implements CrudQueryInterface<Entity, Dto> {
+  class MicroserviceCrudController implements CrudQueryInterface<Entity> {
     @Inject(provider)
-    readonly [providerToken]: CrudQueryInterface<Entity, Dto>;
+    readonly [providerToken]: CrudQueryInterface<Entity>;
 
     @MessagePattern({ cmd: `create${entityName}` })
     async create(
-      @Payload('record') record: CrudCreateType<Dto>,
+      @Payload('record') record: CrudCreateType<Entity>,
     ): Promise<CrudOneResult<Entity>> {
       return this[providerToken].create(record);
     }
@@ -54,7 +54,7 @@ export function MicroserviceCrudControllerFactory<Entity, Dto>(
 
     @MessagePattern({ cmd: `update${entityName}` })
     async update(
-      @Payload('record') record: CrudUpdateType<Dto>,
+      @Payload('record') record: CrudUpdateType<Entity>,
     ): Promise<CrudOneResult<Entity>> {
       return this[providerToken].update(record);
     }

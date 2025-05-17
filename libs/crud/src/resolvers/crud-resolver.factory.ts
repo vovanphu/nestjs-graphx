@@ -1,7 +1,16 @@
 import { Inject } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
-  ClassType,
+  toCreateDto,
+  toFindManyOptionsDto,
+  toFindOneDto,
+  toIdentityDto,
+  toManyResultDto,
+  toOneResultDto,
+  toUpdateDto,
+} from '../dtos';
+import {
+  ClassConstructor,
   CrudCreateType,
   CrudFindManyType,
   CrudFindType,
@@ -10,47 +19,37 @@ import {
   CrudQueryInterface,
   CrudUpdateType,
   IdentifyType,
-  toCreateDto,
-  toCrudFindManyOptions,
-  toCrudManyResult,
-  toCrudOneResult,
-  toFindDto,
-  toIdentifyDto,
-  toUpdateDto,
 } from '../types';
 
-export function CrudResolverFactory<Entity, Dto>(
-  EntityClass: ClassType<Entity>,
-  DtoClass: ClassType<Dto>,
-  provider: CrudQueryInterface<Entity, Dto>,
-) {
-  return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
+export function CrudResolverFactory<Entity>(
+  EntityClass: ClassConstructor<Entity>,
+  provider: CrudQueryInterface<Entity>,
+): (
+  BaseClass?: ClassConstructor<any>,
+) => ClassConstructor<CrudQueryInterface<Entity>> {
+  return (
+    BaseClass: ClassConstructor<any> = class {},
+  ): ClassConstructor<CrudQueryInterface<Entity>> => {
     const entityName = EntityClass.name;
-    const CreateDto = toCreateDto(DtoClass);
-    const UpdateDto = toUpdateDto(DtoClass);
-    const FindDto = toFindDto(EntityClass);
-    const IdentifyDto = toIdentifyDto(EntityClass);
-    const OneResult = toCrudOneResult(EntityClass);
-    const FindManyOptions = toCrudFindManyOptions(EntityClass);
-    const ManyResult = toCrudManyResult(EntityClass);
+    const CreateDto = toCreateDto(EntityClass);
+    const UpdateDto = toUpdateDto(EntityClass);
+    const FindOneDto = toFindOneDto(EntityClass);
+    const IdentifyDto = toIdentityDto(EntityClass);
+    const OneResult = toOneResultDto(EntityClass);
+    const FindManyOptions = toFindManyOptionsDto(EntityClass);
+    const ManyResult = toManyResultDto(EntityClass);
     const entityService = Symbol(entityName);
 
     @Resolver(EntityClass)
-    class CrudResolver
-      extends BaseClass
-      implements CrudQueryInterface<Entity, Dto>
-    {
-      @Inject(provider) readonly [entityService]: CrudQueryInterface<
-        Entity,
-        Dto
-      >;
+    class CrudResolver extends BaseClass implements CrudQueryInterface<Entity> {
+      @Inject(provider) readonly [entityService]: CrudQueryInterface<Entity>;
 
       @Mutation(() => OneResult, {
         name: `create${entityName}`,
       })
       async create(
         @Args(`create${entityName}Record`, { type: () => CreateDto })
-        record: CrudCreateType<Dto>,
+        record: CrudCreateType<Entity>,
       ): Promise<CrudOneResult<Entity>> {
         return this[entityService].create(record);
       }
@@ -59,7 +58,7 @@ export function CrudResolverFactory<Entity, Dto>(
         name: `find${entityName}`,
       })
       async find(
-        @Args(`find${entityName}Record`, { type: () => FindDto })
+        @Args(`find${entityName}Record`, { type: () => FindOneDto })
         record: CrudFindType<Entity>,
       ): Promise<CrudOneResult<Entity>> {
         return this[entityService].find(record);
@@ -93,7 +92,7 @@ export function CrudResolverFactory<Entity, Dto>(
       })
       async update(
         @Args(`update${entityName}Record`, { type: () => UpdateDto })
-        record: CrudUpdateType<Dto>,
+        record: CrudUpdateType<Entity>,
       ): Promise<CrudOneResult<Entity>> {
         return this[entityService].update(record);
       }
@@ -103,7 +102,7 @@ export function CrudResolverFactory<Entity, Dto>(
         nullable: true,
       })
       async softDelete(
-        @Args(`softDelete${entityName}Record`, { type: () => FindDto })
+        @Args(`softDelete${entityName}Record`, { type: () => IdentifyDto })
         record: IdentifyType<Entity>,
       ): Promise<CrudOneResult<Entity>> {
         return this[entityService].softDelete(record);
@@ -114,7 +113,7 @@ export function CrudResolverFactory<Entity, Dto>(
         nullable: true,
       })
       async restore(
-        @Args(`restore${entityName}Record`, { type: () => FindDto })
+        @Args(`restore${entityName}Record`, { type: () => IdentifyDto })
         record: IdentifyType<Entity>,
       ): Promise<CrudOneResult<Entity>> {
         return this[entityService].restore(record);
@@ -125,7 +124,7 @@ export function CrudResolverFactory<Entity, Dto>(
         nullable: true,
       })
       async delete(
-        @Args(`delete${entityName}Record`, { type: () => FindDto })
+        @Args(`delete${entityName}Record`, { type: () => IdentifyDto })
         record: IdentifyType<Entity>,
       ): Promise<CrudOneResult<Entity>> {
         return this[entityService].delete(record);

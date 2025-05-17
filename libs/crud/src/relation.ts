@@ -1,22 +1,22 @@
-import { ClassType } from './types';
+import { ClassConstructor } from './types';
 
 export const ONE_MANY_RELATION_WATERMARK = '__oneManyRelation__';
 
-export interface OneManyRelationOptions<Entity, Dto> {
-  RelatedEntityClass: ClassType<Entity>;
-  RelatedDtoClass: ClassType<Dto>;
+export interface OneManyRelationOptions<Entity> {
+  RelatedEntityClass: ClassConstructor<Entity>;
+  RelatedDtoClass: ClassConstructor<Entity>;
   relationName: string;
   inverseRelation: (...params: any[]) => any;
 }
 
-export function OneManyRelation<Entity, Dto>(
-  RelatedEntityClass: ClassType<Entity>,
-  RelatedDtoClass: ClassType<Dto>,
+export function OneManyRelation<Entity>(
+  RelatedEntityClass: ClassConstructor<Entity>,
+  RelatedDtoClass: ClassConstructor<Entity>,
   relationName: string, // TODO: Refactory this
   inverseRelation: (...params: any[]) => any,
 ): ClassDecorator {
   return (target) => {
-    const oneManyRelations: OneManyRelationOptions<Entity, Dto>[] =
+    const oneManyRelations: OneManyRelationOptions<Entity>[] =
       Reflect.getMetadata(ONE_MANY_RELATION_WATERMARK, target) || [];
     oneManyRelations.push({
       RelatedEntityClass,

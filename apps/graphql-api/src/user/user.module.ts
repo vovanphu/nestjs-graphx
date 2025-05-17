@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TaskService } from '../task/task.service';
+import { UserProfileModule } from './user-profile';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
 @Module({
-  providers: [UserService, TaskService, UserResolver],
+  imports: [UserProfileModule],
+  providers: [UserService, UserResolver],
   exports: [],
 })
 export class UserModule {}

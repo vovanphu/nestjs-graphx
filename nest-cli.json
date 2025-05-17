@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/task-management/tsconfig.app.json"
       }
+    },
+    "cat-management": {
+      "type": "application",
+      "root": "apps/cat-management",
+      "entryFile": "main",
+      "sourceRoot": "apps/cat-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/cat-management/tsconfig.app.json"
+      }
     }
   }
 }

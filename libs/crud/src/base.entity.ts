@@ -1,5 +1,5 @@
 import { SerializeOptions } from '@nestjs/common';
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType } from '@nestjs/graphql';
 import {
   CreateDateColumn,
   DeleteDateColumn,
@@ -7,8 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { AutoField } from './decorators';
 
-@ObjectType()
 @Entity()
 @SerializeOptions({
   excludePrefixes: ['_'],
@@ -18,21 +18,25 @@ export class BaseEntity<T> {
     Object.assign(this, partial);
   }
 
-  @Field(() => ID)
+  @AutoField({ typeFn: () => ID, viewPolicy: ['read', 'update'] })
   @PrimaryGeneratedColumn()
   id: string;
 
-  @Field(() => String)
+  @AutoField({ typeFn: () => String, viewPolicy: ['read'] })
   @CreateDateColumn()
   createdAt: Date;
 
-  @Field(() => String)
+  @AutoField({ typeFn: () => String, viewPolicy: ['read'] })
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Field(() => String, { nullable: true })
+  @AutoField({
+    typeFn: () => String,
+    fieldOptions: { nullable: true },
+    viewPolicy: ['read'],
+  })
   @DeleteDateColumn()
-  deletedAt: Date;
+  deletedAt?: Date;
 }
 
 @InputType()

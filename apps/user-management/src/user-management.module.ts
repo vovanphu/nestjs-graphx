@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserManagementController } from './user-management.controller';
 import { UserManagementService } from './user-management.service';
+import { UserProfileModule } from './user-profile';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UserManagementService } from './user-management.service';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([User]),
+    UserProfileModule,
   ],
   controllers: [UserManagementController],
   providers: [UserManagementService],

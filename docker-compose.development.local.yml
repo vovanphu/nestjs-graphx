@@ -1,0 +1,51 @@
+services:
+  graphql-api:
+    image: node:24
+    command: yarn start:dev graphql-api
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - 4000:3000
+    restart: unless-stopped
+    networks:
+      - docker-env_net-service
+    mem_limit: 512m
+
+  user-management:
+    image: node:24
+    command: yarn start:dev user-management
+    working_dir: /app
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    networks:
+      - docker-env_net-service
+    mem_limit: 512m
+
+  cat-management:
+    image: node:24
+    command: yarn start:dev cat-management
+    working_dir: /app
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    networks:
+      - docker-env_net-service
+    mem_limit: 512m
+
+  # task-management:
+  #   image: node:24
+  #   command: yarn start:dev task-management
+  #   working_dir: /app
+  #   volumes:
+  #     - .:/app
+  #   restart: unless-stopped
+  #   networks:
+  #     - docker-env_net-service
+  #   mem_limit: 512m
+
+networks:
+  docker-env_net-service:
+    external: true
+  

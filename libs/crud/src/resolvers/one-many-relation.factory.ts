@@ -1,36 +1,35 @@
 import { Inject } from '@nestjs/common';
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { toFindManyOptionsDto, toManyResultDto } from '../dtos';
 import {
   ONE_MANY_RELATION_WATERMARK,
   OneManyRelationOptions,
 } from '../relation';
 import { findCrudProxyProvider } from '../services';
 import {
-  ClassType,
+  ClassConstructor,
   CrudFindManyOptions,
   CrudManyResult,
   CrudQueryInterface,
-  toCrudFindManyOptions,
-  toCrudManyResult,
 } from '../types';
 
-export function OneManyRelationFactory<Entity, RelatedEntity, RelatedDto>(
+export function OneManyRelationFactory<Entity, RelatedEntity>(
   EntityClass: Entity,
-  relation: OneManyRelationOptions<RelatedEntity, RelatedDto>,
-  provider: CrudQueryInterface<RelatedEntity, RelatedDto>,
+  relation: OneManyRelationOptions<RelatedEntity>,
+  provider: CrudQueryInterface<RelatedEntity>,
 ) {
-  return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
+  return (
+    BaseClass: ClassConstructor<any> = class {},
+  ): ClassConstructor<any> => {
     const { RelatedEntityClass, relationName } = relation;
-    const FindOptions = toCrudFindManyOptions(RelatedEntityClass);
-    const RelatedManyResult = toCrudManyResult(RelatedEntityClass);
+    const FindOptions = toFindManyOptionsDto(RelatedEntityClass);
+    const RelatedManyResult = toManyResultDto(RelatedEntityClass);
     const relationService = Symbol('relationName');
 
     @Resolver(EntityClass)
     class OneManyRelation extends BaseClass {
-      @Inject(provider) readonly [relationService]: CrudQueryInterface<
-        RelatedEntity,
-        RelatedDto
-      >;
+      @Inject(provider)
+      readonly [relationService]: CrudQueryInterface<RelatedEntity>;
 
       @ResolveField(() => RelatedManyResult)
       async [relationName](
@@ -53,16 +52,18 @@ export function OneManyRelationsFactory<Entity>(
   EntityClass: Entity,
   providers: any[],
 ) {
-  return (BaseClass: ClassType<any> = class {}): ClassType<any> => {
-    const relations: OneManyRelationOptions<any, any>[] =
+  return (
+    BaseClass: ClassConstructor<any> = class {},
+  ): ClassConstructor<any> => {
+    const relations: OneManyRelationOptions<any>[] =
       Reflect.getMetadata(ONE_MANY_RELATION_WATERMARK, EntityClass) || [];
     return relations.reduce(
-      <RelatedEntity, RelatedDto>(
-        Extended: ClassType<any>,
-        relation: OneManyRelationOptions<RelatedEntity, RelatedDto>,
+      <RelatedEntity>(
+        Extended: ClassConstructor<any>,
+        relation: OneManyRelationOptions<RelatedEntity>,
       ) => {
         const { RelatedEntityClass } = relation;
-        const provider: CrudQueryInterface<RelatedEntity, RelatedDto> =
+        const provider: CrudQueryInterface<RelatedEntity> =
           findCrudProxyProvider(providers, RelatedEntityClass);
         return OneManyRelationFactory(
           EntityClass,

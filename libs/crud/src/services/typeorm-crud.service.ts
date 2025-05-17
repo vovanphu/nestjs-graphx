@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import {
-  ClassType,
+  ClassConstructor,
   CrudCreateType,
   CrudFindManyType,
   CrudFindType,
@@ -27,14 +27,14 @@ import {
   IdentifyType,
 } from '../types';
 
-export async function applyFilter<Entity, Dto>(
+export async function applyFilter<Entity>(
   queryBuilder: SelectQueryBuilder<Entity> | WhereExpressionBuilder,
   metadata: EntityMetadata,
-  options: FilterOptions<Dto>, // # TODO Check this, why didn't use <Entity> for simplicity
+  options: FilterOptions<Entity>,
 ): Promise<void> {
   options = options || {};
   Object.keys(options).forEach((key) => {
-    const tempKey = `${key}_${Math.round(Math.random() * 1000)}`; // # TODO Is this okay to random from 1 to 1000
+    const tempKey = `${key}_${Math.round(Math.random() * 10000)}`;
     const operators: FilterOperator<Entity> = options[key] || {};
     const column: ColumnMetadata = metadata.columns.find(
       (column) => column.propertyName === key,
@@ -188,9 +188,9 @@ export async function applyFilter<Entity, Dto>(
   });
 }
 
-export async function applySort<Entity, Dto>(
+export async function applySort<Entity>(
   queryBuilder: SelectQueryBuilder<Entity>,
-  options: CrudSortOptions<Dto>,
+  options: CrudSortOptions<Entity>,
 ): Promise<void> {
   const aliasName = queryBuilder.expressionMap.mainAlias.name;
   const { field, direction } = options;
@@ -205,10 +205,10 @@ export async function applyOffsetPaginate<Entity>(
   queryBuilder.skip((options.page - 1) * options.limit).take(options.limit);
 }
 
-export async function offsetPaginate<Entity, Dto>( // # TODO Check its name, this function does more than just offset paginate
+export async function offsetPaginate<Entity>( // # TODO Check its name, this function does more than just offset paginate
   repo: Repository<Entity>,
-  filterOptions: FilterOptions<Dto>,
-  sortOptions: CrudSortOptions<Dto> = {},
+  filterOptions: FilterOptions<Entity>,
+  sortOptions: CrudSortOptions<Entity> = {},
   offsetPaginateOptions: CrudOffsetOptions = {},
 ): Promise<CrudManyResult<Entity>> {
   const queryBuilder = repo.createQueryBuilder();
@@ -226,10 +226,10 @@ export async function offsetPaginate<Entity, Dto>( // # TODO Check its name, thi
   };
 }
 
-export async function paginate<Entity, Dto>( // # TODO Check its name, why we need to call another function here?
+export async function queryAndPaginate<Entity>(
   repo: Repository<Entity>,
-  filterOptions: FilterOptions<Dto>,
-  sortOptions: CrudSortOptions<Dto>,
+  filterOptions: FilterOptions<Entity>,
+  sortOptions: CrudSortOptions<Entity>,
   paginateOptions: CrudPaginationOptions,
 ): Promise<CrudManyResult<Entity>> {
   // This function just provide default values
@@ -239,6 +239,7 @@ export async function paginate<Entity, Dto>( // # TODO Check its name, why we ne
   const offsetPaginateOptions = paginateOptions?.offset || {};
   offsetPaginateOptions.page = offsetPaginateOptions.page || 1;
   offsetPaginateOptions.limit = offsetPaginateOptions.limit || 5;
+
   return offsetPaginate(
     repo,
     filterOptions,
@@ -247,46 +248,48 @@ export async function paginate<Entity, Dto>( // # TODO Check its name, why we ne
   );
 }
 
-export function TypeOrmCrudServiceFactory<Entity>(
-  EntityClass: ClassType<Entity>,
-): ClassType<CrudQueryInterface<Entity, any>> {
+export function TypeOrmCrudServiceFactory<Entity extends ClassConstructor<any>>(
+  EntityClass: Entity,
+): ClassConstructor<CrudQueryInterface<Entity>> {
   const dataSourceSymbol = Symbol(`DataSource${EntityClass.name}`);
   const repoSymbol = Symbol(`Repository${EntityClass.name}`);
 
   @Injectable()
-  class TypeOrmCrudService<Entity, Dto>
-    implements CrudQueryInterface<Entity, Dto>
-  {
+  class TypeOrmCrudService<Entity> implements CrudQueryInterface<Entity> {
     @Inject(DataSource) readonly [dataSourceSymbol]: DataSource;
     @InjectRepository(EntityClass) readonly [repoSymbol]: Repository<Entity>;
 
-    async create(record: CrudCreateType<Dto>): Promise<CrudOneResult<Entity>> {
+    async create(
+      record: CrudCreateType<Entity>,
+    ): Promise<CrudOneResult<Entity>> {
       return {
         entity: await this[repoSymbol].save(record as Entity),
       };
     }
 
-    async find(
-      record: CrudFindType<Entity | Dto>,
-    ): Promise<CrudOneResult<Entity>> {
+    async find(record: CrudFindType<Entity>): Promise<CrudOneResult<Entity>> {
       const queryBuilder = this[repoSymbol].createQueryBuilder();
+      let fieldCounter = 1;
+
       for (const field in record as any) {
-        queryBuilder.andWhere(`${field} = :${field}`, {
-          [field]: record[field],
+        const fieldPlaceholder = `${field}_${fieldCounter}`;
+        fieldCounter++;
+
+        queryBuilder.andWhere(`${field} = :${fieldPlaceholder}`, {
+          [fieldPlaceholder]: record[field],
         });
       }
+
       return {
         entity: await queryBuilder.getOne(),
       };
     }
 
     async findById(
-      record: IdentifyType<Entity | Dto>,
+      record: IdentifyType<Entity>,
     ): Promise<CrudOneResult<Entity>> {
-      const queryBuilder = this[repoSymbol].createQueryBuilder();
-      queryBuilder.andWhere('id = :id', { id: record.id });
       return {
-        entity: await queryBuilder.getOne(),
+        entity: await this[repoSymbol].findOneBy({ id: record.id } as any),
       };
     }
 
@@ -294,7 +297,7 @@ export function TypeOrmCrudServiceFactory<Entity>(
       options: CrudFindManyType<Entity>,
     ): Promise<CrudManyResult<Entity>> {
       options = options || {};
-      return paginate(
+      return queryAndPaginate(
         this[repoSymbol],
         options?.filter,
         options?.sort,
@@ -302,40 +305,46 @@ export function TypeOrmCrudServiceFactory<Entity>(
       );
     }
 
-    async update(record: CrudUpdateType<Dto>): Promise<CrudOneResult<Entity>> {
-      const { entity } = await this.findById(record);
+    async update(
+      record: CrudUpdateType<Entity>,
+    ): Promise<CrudOneResult<Entity>> {
+      const { id, ...rest } = record;
+      const { entity } = await this.findById({ id } as any);
+
       if (!entity) throw new NotFoundException();
+
       const newEntity = this[repoSymbol].merge(
         entity,
-        record as unknown as DeepPartial<Entity>,
+        rest as DeepPartial<Entity>,
       );
+
       return {
         entity: await this[repoSymbol].save(newEntity),
       };
     }
 
     async softDelete(
-      record: IdentifyType<Entity | Dto>,
+      record: IdentifyType<Entity>,
     ): Promise<CrudOneResult<Entity>> {
       const { entity } = await this.findById(record);
-      if (!entity) return { entity }; // # TODO Should we throw error here?
+      if (!entity) throw new NotFoundException();
       return {
         entity: await this[repoSymbol].softRemove(entity),
       };
     }
 
     async restore(
-      record: IdentifyType<Entity | Dto>,
+      record: IdentifyType<Entity>,
     ): Promise<CrudOneResult<Entity>> {
       await this[repoSymbol].restore(record.id);
       return this.find(record);
     }
 
-    async delete(
-      record: IdentifyType<Entity | Dto>,
-    ): Promise<CrudOneResult<Entity>> {
+    async delete(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>> {
       const { entity } = await this.findById(record);
-      return { entity: await this[repoSymbol].remove(entity) };
+      if (!entity) throw new NotFoundException();
+      await this[repoSymbol].remove(entity);
+      return { entity: null };
     }
   }
 

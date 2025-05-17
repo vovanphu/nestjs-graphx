@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import {
-  ClassType,
+  ClassConstructor,
   CrudCreateType,
   CrudFindManyType,
   CrudFindType,
@@ -17,34 +17,36 @@ export const CRUD_PROXY_WATERMARK = Symbol('CRUD_PROXY_WATERMARK');
 
 // # TODO: Pass down proxy token so we can inject it in the service
 export function CrudProxy<Entity>(
-  EntityClass: ClassType<Entity>,
+  EntityClass: ClassConstructor<Entity>,
 ): ClassDecorator {
   return (target) => {
     Reflect.defineMetadata(CRUD_PROXY_WATERMARK, EntityClass, target);
   };
 }
 
-export function findCrudProxyProvider<Entity, Dto>(
-  providers: CrudQueryInterface<Entity, Dto>[],
-  EntityClass: ClassType<Entity>,
-): CrudQueryInterface<Entity, Dto> | null {
+export function findCrudProxyProvider<Entity>(
+  providers: CrudQueryInterface<Entity>[],
+  EntityClass: ClassConstructor<Entity>,
+): CrudQueryInterface<Entity> | null {
   if (!providers || !EntityClass) return null;
   return providers.find((p) => {
     return Reflect.getMetadata(CRUD_PROXY_WATERMARK, p) === EntityClass;
   });
 }
 
-export function CrudProxyServiceFactory<Entity, Dto>(
-  EntityClass: ClassType<Entity>,
-): ClassType<any> {
+export function CrudProxyServiceFactory<Entity>(
+  EntityClass: ClassConstructor<Entity>,
+): ClassConstructor<any> {
   const entityName = EntityClass.name;
 
   @CrudProxy(EntityClass)
   @Injectable()
-  class ClientCrudService implements CrudQueryInterface<Entity, Dto> {
+  class ClientCrudService implements CrudQueryInterface<Entity> {
     constructor(readonly client: ClientProxy) {}
 
-    async create(record: CrudCreateType<Dto>): Promise<CrudOneResult<Entity>> {
+    async create(
+      record: CrudCreateType<Entity>,
+    ): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `create${entityName}` },
         { record },
@@ -80,7 +82,9 @@ export function CrudProxyServiceFactory<Entity, Dto>(
       return lastValueFrom(result$);
     }
 
-    async update(record: CrudUpdateType<Dto>): Promise<CrudOneResult<Entity>> {
+    async update(
+      record: CrudUpdateType<Entity>,
+    ): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `update${entityName}` },
         { record },

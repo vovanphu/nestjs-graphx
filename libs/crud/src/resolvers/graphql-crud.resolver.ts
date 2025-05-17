@@ -1,28 +1,23 @@
 import { CrudResolverFactory } from '.';
 import { findCrudProxyProvider } from '../services';
-import { ClassType, CrudQueryInterface } from '../types';
+import { ClassConstructor, CrudQueryInterface } from '../types';
 
 export type GraphqlCrudResolverOptions = {
   providers?: any[];
 };
 
-export function GraphqlCrudResolverFactory<Entity, Dto>(
-  EntityClass: ClassType<Entity>,
-  DtoClass: ClassType<Dto>,
+export function GraphqlCrudResolverFactory<Entity>(
+  EntityClass: ClassConstructor<Entity>,
   options?: GraphqlCrudResolverOptions,
-): ClassType<any> {
+): ClassConstructor<any> {
   const { providers } = options || {};
 
-  const provider: CrudQueryInterface<Entity, Dto> = findCrudProxyProvider(
+  const provider: CrudQueryInterface<Entity> = findCrudProxyProvider(
     providers,
     EntityClass,
   );
 
-  const CrudResolverExtended = CrudResolverFactory(
-    EntityClass,
-    DtoClass,
-    provider,
-  );
+  const CrudResolverExtended = CrudResolverFactory(EntityClass, provider);
 
   // const OneManyRelationsExtended = OneManyRelationsFactory(
   //   EntityClass,

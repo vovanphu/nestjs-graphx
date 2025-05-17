@@ -1,30 +1,21 @@
-import { BaseDto, BaseEntity } from '@app/crud';
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Column, Entity } from 'typeorm';
+import { AutoField, BaseEntity } from '@app/crud';
+import { Column, Entity, OneToOne } from 'typeorm';
+import { UserProfile } from './user-profile.entity';
 
-@ObjectType()
 @Entity()
 export class User extends BaseEntity<User> {
-  @Field(() => String)
+  @AutoField({ typeFn: () => String, viewPolicy: ['create', 'read'] })
   @Column({ unique: true })
   username: string;
 
-  @Field(() => String)
+  @AutoField({ typeFn: () => String })
   @Column({ unique: true })
   email: string;
 
+  @AutoField({ typeFn: () => String, viewPolicy: ['create', 'update'] })
   @Column()
   password: string;
-}
 
-@InputType()
-export class UserDto extends BaseDto<UserDto> {
-  @Field(() => String)
-  username: string;
-
-  @Field(() => String)
-  email: string;
-
-  @Field(() => String)
-  password: string;
+  @OneToOne(() => UserProfile, (profile) => profile.user)
+  profile: UserProfile;
 }
