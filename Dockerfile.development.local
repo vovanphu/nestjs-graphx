@@ -1,7 +1,17 @@
 FROM node:24-alpine
 
-RUN apk add --no-cache python3 make g++ \
-  && yarn global add argon2 \
-  && apk del python3 make g++
+RUN apk add --no-cache \
+  python3 \
+  make \
+  g++ \
+  libffi-dev \
+  libc-dev \
+  git \
+  && python3 -m ensurepip \
+  && pip3 install --no-cache --upgrade pip setuptools
 
 WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
