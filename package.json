@@ -1,26 +1,26 @@
 {
-  "name": "nestjs-crud",
+  "name": "nestjs-graphx",
   "version": "0.0.1",
   "description": "",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "docker-up:dev": "docker-compose -f ./docker-compose.development.local.yml up",
-    "docker-down:dev": "docker-compose -f ./docker-compose.development.local.yml down --remove-orphans",
-    "docker-build:dev": "docker-compose -f ./docker-compose.development.local.yml build",
+    "docker-up:dev": "docker-compose -f ./docker-compose.development.local.yml --env-file ./.env.development.local up",
+    "docker-down:dev": "docker-compose -f ./docker-compose.development.local.yml --env-file ./.env.development.local down --remove-orphans",
+    "docker-build:dev": "docker-compose -f ./docker-compose.development.local.yml --env-file ./.env.development.local build",
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/apps/nestjs-crud/main",
+    "start:prod": "node dist/apps/nestjs-graphx/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/nestjs-crud/test/jest-e2e.json"
+    "test:e2e": "jest --config ./apps/nestjs-graphx/test/jest-e2e.json"
   },
   "dependencies": {
     "@apollo/server": "^4.7.0",
@@ -36,6 +36,8 @@
     "amqplib": "^0.10.8",
     "apollo-server-core": "^3.12.0",
     "class-transformer": "^0.5.1",
+    "dataloader": "^2.2.3",
+    "fast-json-stable-stringify": "^2.1.0",
     "graphql": "^16.6.0",
     "mysql2": "^3.2.4",
     "pluralize": "^8.0.0",
@@ -87,7 +89,7 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@app/crud(|/.*)$": "<rootDir>/libs/crud/src/$1",
+      "^@app/graphx(|/.*)$": "<rootDir>/libs/graphx/src/$1",
       "^@app/entities(|/.*)$": "<rootDir>/libs/entities/src/$1"
     }
   }

@@ -1,0 +1,39 @@
+[mysqld]
+# Disable strict SQL mode for compatibility
+sql_mode=
+
+# Reduce packet size for typical dev usage
+max_allowed_packet=16M
+
+# Charset settings
+character_set_server=utf8
+collation_server=utf8_general_ci
+
+# Avoid hostname resolution (faster connection)
+skip-name-resolve
+
+# Cache & Buffer Sizes (dev-optimized)
+table_open_cache = 64
+sort_buffer_size = 512K
+read_buffer_size = 512K
+read_rnd_buffer_size = 1M
+net_buffer_length = 16K
+
+# InnoDB settings for minimal memory usage
+innodb_file_per_table = 1
+innodb_buffer_pool_size = 128M
+innodb_log_file_size = 32M
+innodb_log_buffer_size = 8M
+innodb_flush_method = O_DIRECT
+innodb_io_capacity = 100
+innodb_old_blocks_time = 500
+innodb_open_files = 200
+
+# Slow query log (optional in dev)
+slow_query_log_file = /var/lib/mysql/mysql-slow.log
+long_query_time = 2
+
+default-authentication-plugin=caching_sha2_password
+max_connections = 20
+thread_cache_size = 8
+performance_schema = OFF

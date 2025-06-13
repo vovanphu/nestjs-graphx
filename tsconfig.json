@@ -17,12 +17,13 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "esModuleInterop": true,
     "paths": {
-      "@app/crud": [
-        "libs/crud/src"
+      "@app/graphx": [
+        "libs/graphx/src"
       ],
-      "@app/crud/*": [
-        "libs/crud/src/*"
+      "@app/graphx/*": [
+        "libs/graphx/src/*"
       ],
       "@app/entities": [
         "libs/entities/src"

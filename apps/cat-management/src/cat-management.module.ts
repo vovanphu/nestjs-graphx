@@ -1,9 +1,7 @@
-import { Cat } from '@app/entities';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CatManagementController } from './cat-management.controller';
-import { CatManagementService } from './cat-management.service';
+import { CatModule } from './cat/cat.module';
 
 @Module({
   imports: [
@@ -29,9 +27,9 @@ import { CatManagementService } from './cat-management.service';
       },
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Cat]),
+    CatModule,
   ],
-  controllers: [CatManagementController],
-  providers: [CatManagementService],
+  controllers: [],
+  providers: [],
 })
 export class CatManagementModule {}

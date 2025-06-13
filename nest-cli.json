@@ -1,49 +1,40 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/nestjs-crud/src",
+  "sourceRoot": "apps/nestjs-graphx/src",
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/nestjs-crud/tsconfig.app.json"
+    "tsConfigPath": "apps/nestjs-graphx/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/nestjs-crud",
+  "root": "apps/nestjs-graphx",
   "projects": {
-    "nestjs-crud": {
+    "nestjs-graphx": {
       "type": "application",
-      "root": "apps/nestjs-crud",
+      "root": "apps/nestjs-graphx",
       "entryFile": "main",
-      "sourceRoot": "apps/nestjs-crud/src",
+      "sourceRoot": "apps/nestjs-graphx/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/nestjs-crud/tsconfig.app.json"
+        "tsConfigPath": "apps/nestjs-graphx/tsconfig.app.json"
       }
     },
-    "user-management": {
+    "graphql-gateway": {
       "type": "application",
-      "root": "apps/user-management",
+      "root": "apps/graphql-gateway",
       "entryFile": "main",
-      "sourceRoot": "apps/user-management/src",
+      "sourceRoot": "apps/graphql-gateway/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/user-management/tsconfig.app.json"
+        "tsConfigPath": "apps/graphql-gateway/tsconfig.app.json"
       }
     },
-    "graphql-api": {
-      "type": "application",
-      "root": "apps/graphql-api",
-      "entryFile": "main",
-      "sourceRoot": "apps/graphql-api/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/graphql-api/tsconfig.app.json"
-      }
-    },
-    "crud": {
+    "graphx": {
       "type": "library",
-      "root": "libs/crud",
+      "root": "libs/graphx",
       "entryFile": "index",
-      "sourceRoot": "libs/crud/src",
+      "sourceRoot": "libs/graphx/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/crud/tsconfig.lib.json"
+        "tsConfigPath": "libs/graphx/tsconfig.lib.json"
       }
     },
     "entities": {
@@ -53,15 +44,6 @@
       "sourceRoot": "libs/entities/src",
       "compilerOptions": {
         "tsConfigPath": "libs/entities/tsconfig.lib.json"
-      }
-    },
-    "task-management": {
-      "type": "application",
-      "root": "apps/task-management",
-      "entryFile": "main",
-      "sourceRoot": "apps/task-management/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/task-management/tsconfig.app.json"
       }
     },
     "cat-management": {

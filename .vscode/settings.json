@@ -12,5 +12,8 @@
     "source.organizeImports",
     "source.formatDocument",
     "source.fixAll.eslint"
-  ]
+  ],
+  "[sql]": {
+    "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode"
+  }
 }

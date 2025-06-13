@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { CatManagementModule } from './../src/cat-management.module';
+import { Test, TestingModule } from '@nestjs/testing';
+import request from 'supertest';
+import { CatManagementModule } from '../src/cat-management.module';
 
-describe('CatManagementController (e2e)', () => {
+describe('UserManagementController (e2e)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {

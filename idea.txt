@@ -1,4 +1,4 @@
-graphql-api:
+graphql-gateway:
   A:
     - resolver A (graphql resolver) -> service A
     - service A (client service) -> transport

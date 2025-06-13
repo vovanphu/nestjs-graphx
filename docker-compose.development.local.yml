@@ -1,51 +1,71 @@
 services:
-  graphql-api:
-    image: node:24
-    command: yarn start:dev graphql-api
+  mysql-service:
+    image: mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: true
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./conf/mysql/development.local.cnf:/etc/mysql/my.cnf
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+    networks:
+      - net-service
+    mem_limit: 192m
+
+  rabbitmq-service:
+    image: rabbitmq:alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+    - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+    # ports:
+    #   - 5672:5672
+    #   - 15672:15672
+    networks:
+      - net-service
+    mem_limit: 128m
+
+  graphql-gateway:
+    image: node:24-alpine
+    command: yarn start:dev graphql-gateway
     working_dir: /app
     volumes:
       - .:/app
     ports:
-      - 4000:3000
+      - ${GRAPHQL_GATEWAY_PORT}:${GRAPHQL_GATEWAY_PORT}
     restart: unless-stopped
+    depends_on:
+      - mysql-service
+      - rabbitmq-service
     networks:
-      - docker-env_net-service
-    mem_limit: 512m
-
-  user-management:
-    image: node:24
-    command: yarn start:dev user-management
-    working_dir: /app
-    volumes:
-      - .:/app
-    restart: unless-stopped
-    networks:
-      - docker-env_net-service
+      - net-service
     mem_limit: 512m
 
   cat-management:
-    image: node:24
+    image: node:24-alpine
     command: yarn start:dev cat-management
     working_dir: /app
     volumes:
       - .:/app
     restart: unless-stopped
+    depends_on:
+      - mysql-service
+      - rabbitmq-service
     networks:
-      - docker-env_net-service
+      - net-service
     mem_limit: 512m
 
-  # task-management:
-  #   image: node:24
-  #   command: yarn start:dev task-management
-  #   working_dir: /app
-  #   volumes:
-  #     - .:/app
-  #   restart: unless-stopped
-  #   networks:
-  #     - docker-env_net-service
-  #   mem_limit: 512m
+volumes:
+  mysql-data:
+  rabbitmq-data:
 
 networks:
-  docker-env_net-service:
-    external: true
+  net-service:
+    driver: bridge
   
