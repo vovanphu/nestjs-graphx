@@ -46,7 +46,6 @@ import {
   DEFAULT_SORT_FIELD,
   FilterOperator,
   FilterOptions,
-  IdentifyType,
 } from '../types';
 import { extractOrderedParamKeys, lowerCaseFirstLetter } from '../utils';
 
@@ -363,11 +362,9 @@ export function TypeOrmCrudServiceFactory<Entity extends ClassType<any>>(
       };
     }
 
-    async findById(
-      record: IdentifyType<Entity>,
-    ): Promise<CrudOneResult<Entity>> {
+    async findById(entityId: string | number): Promise<CrudOneResult<Entity>> {
       return {
-        entity: await this[repoSymbol].findOneBy({ id: record.id } as any),
+        entity: await this[repoSymbol].findOneBy({ id: entityId } as any),
       };
     }
 
@@ -402,24 +399,22 @@ export function TypeOrmCrudServiceFactory<Entity extends ClassType<any>>(
     }
 
     async softDelete(
-      record: IdentifyType<Entity>,
+      entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      const { entity } = await this.findById(record);
+      const { entity } = await this.findById(entityId);
       if (!entity) throw new NotFoundException();
       return {
         entity: await this[repoSymbol].softRemove(entity),
       };
     }
 
-    async restore(
-      record: IdentifyType<Entity>,
-    ): Promise<CrudOneResult<Entity>> {
-      await this[repoSymbol].restore(record.id);
-      return this.find(record);
+    async restore(entityId: string | number): Promise<CrudOneResult<Entity>> {
+      await this[repoSymbol].restore(entityId);
+      return this.findById(entityId);
     }
 
-    async delete(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>> {
-      const { entity } = await this.findById(record);
+    async delete(entityId: string | number): Promise<CrudOneResult<Entity>> {
+      const { entity } = await this.findById(entityId);
       if (!entity) throw new NotFoundException();
       await this[repoSymbol].remove(entity);
       return { entity: null };

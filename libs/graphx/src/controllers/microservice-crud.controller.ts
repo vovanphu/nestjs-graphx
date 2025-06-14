@@ -14,7 +14,6 @@ import {
   CrudOneResult,
   CrudQueryInterface,
   CrudUpdateType,
-  IdentifyType,
 } from '../types';
 
 export function createMicroserviceCrudController<Entity>(
@@ -49,9 +48,9 @@ export function createMicroserviceCrudController<Entity>(
 
     @MessagePattern({ cmd: `findById${entityName}` })
     async findById(
-      @Payload('record') record: IdentifyType<Entity>,
+      @Payload('entityId') entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[providerToken].find(record);
+      return this[providerToken].findById(entityId);
     }
 
     @MessagePattern({ cmd: `findMany${entityName}` })
@@ -70,23 +69,23 @@ export function createMicroserviceCrudController<Entity>(
 
     @MessagePattern({ cmd: `softDelete${entityName}` })
     async softDelete(
-      @Payload('record') record: IdentifyType<Entity>,
+      @Payload('entityId') entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[providerToken].softDelete(record);
+      return this[providerToken].softDelete(entityId);
     }
 
     @MessagePattern({ cmd: `restore${entityName}` })
     async restore(
-      @Payload('record') record: IdentifyType<Entity>,
+      @Payload('entityId') entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[providerToken].restore(record);
+      return this[providerToken].restore(entityId);
     }
 
     @MessagePattern({ cmd: `delete${entityName}` })
     async delete(
-      @Payload('record') record: IdentifyType<Entity>,
+      @Payload('entityId') entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[providerToken].delete(record);
+      return this[providerToken].delete(entityId);
     }
   }
 

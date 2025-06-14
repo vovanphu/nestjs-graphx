@@ -15,7 +15,6 @@ import {
   CrudOneResult,
   CrudQueryInterface,
   CrudUpdateType,
-  IdentifyType,
   ProxyServiceType,
   RelationProxyServiceInterface,
 } from '../types';
@@ -81,12 +80,10 @@ export function CrudProxyServiceFactory<Entity>(
       return lastValueFrom(result$);
     }
 
-    async findById(
-      record: IdentifyType<Entity>,
-    ): Promise<CrudOneResult<Entity>> {
+    async findById(entityId: string | number): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `findById${entityName}` },
-        { record },
+        { entityId },
       );
       return lastValueFrom(result$);
     }
@@ -112,29 +109,27 @@ export function CrudProxyServiceFactory<Entity>(
     }
 
     async softDelete(
-      record: IdentifyType<Entity>,
+      entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `softDelete${entityName}` },
-        { record },
+        { entityId },
       );
       return lastValueFrom(result$);
     }
 
-    async restore(
-      record: IdentifyType<Entity>,
-    ): Promise<CrudOneResult<Entity>> {
+    async restore(entityId: string | number): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `restore${entityName}` },
-        { record },
+        { entityId },
       );
       return lastValueFrom(result$);
     }
 
-    async delete(record: IdentifyType<Entity>): Promise<CrudOneResult<Entity>> {
+    async delete(entityId: string | number): Promise<CrudOneResult<Entity>> {
       const result$ = this.client.send<CrudOneResult<Entity>>(
         { cmd: `delete${entityName}` },
-        { record },
+        { entityId },
       );
       return lastValueFrom(result$);
     }

@@ -4,13 +4,12 @@ crud.resolver.ts (c) 2025
 */
 
 import { Inject } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   createObjectType,
   toCreateDto,
   toFindManyOptionsDto,
   toFindOneDto,
-  toIdentityDto,
   toManyResultDto,
   toOneResultDto,
   toUpdateDto,
@@ -24,8 +23,8 @@ import {
   CrudOneResult,
   CrudQueryInterface,
   CrudUpdateType,
-  IdentifyType,
 } from '../types';
+import { lowerCaseFirstLetter } from '../utils';
 
 export function createCrudResolver<Entity>(
   EntityClass: ClassType<Entity>,
@@ -37,11 +36,11 @@ export function createCrudResolver<Entity>(
   const CreateDto = toCreateDto(EntityClass);
   const UpdateDto = toUpdateDto(EntityClass);
   const FindOneDto = toFindOneDto(EntityClass);
-  const IdentifyDto = toIdentityDto(EntityClass);
   const OneResult = toOneResultDto(EntityClass);
   const FindManyOptions = toFindManyOptionsDto(EntityClass);
   const ManyResult = toManyResultDto(EntityClass);
   const entityService = Symbol(entityName);
+  const entityNameCamelCase = lowerCaseFirstLetter(entityName);
 
   @Resolver(EntityObjectType)
   class CrudResolver extends BaseClass implements CrudQueryInterface<Entity> {
@@ -71,10 +70,10 @@ export function createCrudResolver<Entity>(
       name: `find${entityName}ById`,
     })
     async findById(
-      @Args(`find${entityName}ByIdRecord`, { type: () => IdentifyDto })
-      record: IdentifyType<Entity>,
+      @Args(`${entityNameCamelCase}Id`, { type: () => ID })
+      entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[entityService].findById(record);
+      return this[entityService].findById(entityId);
     }
 
     @Query(() => ManyResult, {
@@ -105,10 +104,10 @@ export function createCrudResolver<Entity>(
       nullable: true,
     })
     async softDelete(
-      @Args(`softDelete${entityName}Record`, { type: () => IdentifyDto })
-      record: IdentifyType<Entity>,
+      @Args(`${entityNameCamelCase}Id`, { type: () => ID })
+      entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[entityService].softDelete(record);
+      return this[entityService].softDelete(entityId);
     }
 
     @Mutation(() => OneResult, {
@@ -116,10 +115,10 @@ export function createCrudResolver<Entity>(
       nullable: true,
     })
     async restore(
-      @Args(`restore${entityName}Record`, { type: () => IdentifyDto })
-      record: IdentifyType<Entity>,
+      @Args(`${entityNameCamelCase}Id`, { type: () => ID })
+      entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[entityService].restore(record);
+      return this[entityService].restore(entityId);
     }
 
     @Mutation(() => OneResult, {
@@ -127,10 +126,10 @@ export function createCrudResolver<Entity>(
       nullable: true,
     })
     async delete(
-      @Args(`delete${entityName}Record`, { type: () => IdentifyDto })
-      record: IdentifyType<Entity>,
+      @Args(`${entityNameCamelCase}Id`, { type: () => ID })
+      entityId: string | number,
     ): Promise<CrudOneResult<Entity>> {
-      return this[entityService].delete(record);
+      return this[entityService].delete(entityId);
     }
   }
 

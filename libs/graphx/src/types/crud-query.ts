@@ -9,7 +9,6 @@ import {
   CrudFindManyType,
   CrudFindType,
   CrudUpdateType,
-  IdentifyType,
 } from './crud-types';
 
 export interface CrudQueryInterface<ObjectType, InputType = ObjectType> {
@@ -17,9 +16,7 @@ export interface CrudQueryInterface<ObjectType, InputType = ObjectType> {
 
   find(record: CrudFindType<ObjectType>): Promise<CrudOneResult<ObjectType>>;
 
-  findById(
-    record: IdentifyType<ObjectType>,
-  ): Promise<CrudOneResult<ObjectType>>;
+  findById(entityId: string | number): Promise<CrudOneResult<ObjectType>>;
 
   findMany(
     options: CrudFindManyType<ObjectType>,
@@ -27,15 +24,11 @@ export interface CrudQueryInterface<ObjectType, InputType = ObjectType> {
 
   update(record: CrudUpdateType<InputType>): Promise<CrudOneResult<ObjectType>>;
 
-  softDelete?(
-    record: IdentifyType<ObjectType>,
-  ): Promise<CrudOneResult<ObjectType>>;
+  softDelete?(entityId: string | number): Promise<CrudOneResult<ObjectType>>;
 
-  restore?(
-    record: IdentifyType<ObjectType>,
-  ): Promise<CrudOneResult<ObjectType>>;
+  restore?(entityId: string | number): Promise<CrudOneResult<ObjectType>>;
 
-  delete(record: IdentifyType<ObjectType>): Promise<CrudOneResult<ObjectType>>;
+  delete(entityId: string | number): Promise<CrudOneResult<ObjectType>>;
 }
 
 export interface RelationProxyServiceInterface<Entity> {
