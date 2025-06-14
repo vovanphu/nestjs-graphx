@@ -4,15 +4,15 @@ import { ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
-import { AppConfigModule } from './app-config.module';
 import { CatModule } from './cat/cat.module';
+import { GraphqlConfigModule } from './graphql-config.module';
 
 @Global()
 @Module({
   imports: [
-    AppConfigModule,
+    GraphqlConfigModule,
     GraphQLModule.forRootAsync({
-      imports: [AppConfigModule],
+      imports: [GraphqlConfigModule],
       inject: [ConfigService],
       driver: ApolloDriver,
       useFactory: (configService: ConfigService) => {

@@ -1,15 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CatConfigModule } from './cat-config.module';
 import { CatModule } from './cat/cat.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      envFilePath: ['.env.development.local', '.env.development', '.env'],
-      isGlobal: true,
-      cache: true,
-    }),
+    CatConfigModule,
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
         return {

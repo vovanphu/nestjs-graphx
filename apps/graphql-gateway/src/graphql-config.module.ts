@@ -12,4 +12,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   providers: [ConfigService],
   exports: [ConfigService],
 })
-export class AppConfigModule {}
+export class GraphqlConfigModule {}

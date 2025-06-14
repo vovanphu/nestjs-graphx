@@ -1,11 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { AppConfigModule } from './app-config.module';
+import { GraphqlConfigModule } from './graphql-config.module';
 import { GraphqlApiModule } from './graphql-gateway.module';
 
 async function bootstrap() {
   const configContext = await NestFactory.createApplicationContext(
-    AppConfigModule,
+    GraphqlConfigModule,
   );
   const configService = configContext.get(ConfigService);
   const app = await NestFactory.create(GraphqlApiModule);
