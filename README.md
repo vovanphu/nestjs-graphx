@@ -20,6 +20,7 @@ yarn docker-up:dev -d
 ```
 
 Access the GraphQL playground at <http://localhost:4000>
+
 Expore the prebuild services:
 
 - `cat-management`: Manages Cat Boundary Context.
